@@ -23,7 +23,7 @@ public class MigrationManager {
     @PostConstruct
     public void migrateIfEnabled() {
         // Only run migrations once
-        log.debug("Migrations enabled, running.");
+        log.info("Migrations enabled, running.");
         DataSourceMigrationManager mgr = new DataSourceMigrationManager(dataSource);
         mgr.setVersionStratgey(new SimpleVersionStrategy());
         ResourceMigrationResolver resolver = new ResourceMigrationResolver();
