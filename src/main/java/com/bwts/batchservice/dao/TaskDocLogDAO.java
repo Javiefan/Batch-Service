@@ -8,7 +8,7 @@ import java.util.UUID;
 public interface TaskDocLogDAO {
     void insert(TaskDocLog taskDocLog);
 
-    TaskDocLog get(UUID tenantId, UUID documentId);
+    List<TaskDocLog> get(UUID tenantId, UUID documentId);
 
     List<TaskDocLog> get(UUID tenantId);
 }

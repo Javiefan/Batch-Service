@@ -17,7 +17,7 @@
     <properties>
         <target.dir>target</target.dir>
         <common.version>338.0.0</common.version>
-        <bwts.common.version>0.4.13</bwts.common.version>
+        <bwts.common.version>0.6.0</bwts.common.version>
     </properties>
 
     <build>
@@ -166,6 +166,16 @@
             <groupId>org.mybatis</groupId>
             <artifactId>mybatis</artifactId>
             <version>3.3.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.bwts</groupId>
+            <artifactId>bwts-common-kafka</artifactId>
+            <version>0.6.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.bwts</groupId>
+            <artifactId>bwts-common-batch</artifactId>
+            <version>0.6.0</version>
         </dependency>
     </dependencies>
 
