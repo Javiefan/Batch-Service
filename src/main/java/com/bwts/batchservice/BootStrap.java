@@ -9,7 +9,7 @@ import org.springframework.boot.context.web.SpringBootServletInitializer;
 import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
-@ComponentScan("com.bwts.batchservice")
+@ComponentScan("com.bwts.batchservice,com.bwts.common.kafka.consumer,com.bwts.common.kafka.producer")
 public class BootStrap extends SpringBootServletInitializer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BootStrap.class);

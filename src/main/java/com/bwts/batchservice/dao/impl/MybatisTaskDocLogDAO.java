@@ -25,7 +25,7 @@ public class MybatisTaskDocLogDAO implements TaskDocLogDAO{
     }
 
     @Override
-    public TaskDocLog get(UUID tenantId, UUID documentId) {
+    public List<TaskDocLog> get(UUID tenantId, UUID documentId) {
         return null;
     }
 
