@@ -18,6 +18,7 @@ import java.util.Date;
 import java.util.UUID;
 
 @Service
+@Transactional
 public class DocBatchService {
     private static final Logger LOGGER = LoggerFactory.getLogger(DocBatchService.class);
 
@@ -38,7 +39,6 @@ public class DocBatchService {
                            MyBatisFailDocLogDAO failDocLogDAO,
                            @Value("${batch.max.retry}") int maxRetryCount,
                            @Value("${producer.batch.topic}") String producerTopic) {
-        this.kafkaMessageProducer = kafkaMessageProducer;
         this.taskDocLogDAO = taskDocLogDAO;
         this.failDocLogDAO = failDocLogDAO;
         this.maxRetryCount = maxRetryCount;

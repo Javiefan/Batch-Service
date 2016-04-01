@@ -3,6 +3,7 @@
 <mapper namespace="com.bwts.batchservice.dao.mapper.TaskDocLogMapper" >
   <resultMap id="BaseResultMap" type="com.bwts.batchservice.entity.TaskDocLog" >
     <id column="id" property="id" jdbcType="BIGINT" />
+    <result column="flow_id" property="flowId" typeHandler="UUIDTypeHandler" />
     <result column="tenant_id" property="tenantId" typeHandler="UUIDTypeHandler" />
     <result column="document_id" property="documentId" typeHandler="UUIDTypeHandler" />
     <result column="phase" property="phase" jdbcType="VARCHAR" />
@@ -12,7 +13,7 @@
     <result column="action_timestamp" property="actionTimestamp" jdbcType="TIMESTAMP" />
   </resultMap>
   <sql id="Base_Column_List" >
-    id, tenant_id, document_id, phase, retry_time, action_result, message, action_timestamp
+    id, flow_id, tenant_id, document_id, phase, retry_time, action_result, message, action_timestamp
   </sql>
   <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
     select 
@@ -20,109 +21,42 @@
     from task_doc_log
     where id = #{id,jdbcType=BIGINT}
   </select>
+  <select id="selectDocLog" resultMap="BaseResultMap" parameterType="Map">
+    SELECT
+      <include refid="Base_Column_List"/>
+    FROM task_doc_log
+    WHERE flow_id = #{flowId,jdbcType=OTHER,typeHandler=UUIDTypeHandler}
+          AND tenant_id = #{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler}
+          AND document_id = #{documentId,jdbcType=OTHER,typeHandler=UUIDTypeHandler}
+          AND phase = #{phase,jdbcType=VARCHAR}
+  </select>
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
     delete from task_doc_log
     where id = #{id,jdbcType=BIGINT}
   </delete>
-  <insert id="insert" parameterType="TaskDocLog" >
-    insert into task_doc_log (id, tenant_id, document_id, 
-      phase, retry_time, action_result, 
-      message, action_timestamp)
-    values (#{id,jdbcType=BIGINT}, #{tenantId,typeHandler=UUIDTypeHandler}, #{documentId,typeHandler=UUIDTypeHandler}, 
-      #{phase,jdbcType=VARCHAR}, #{retryTime,jdbcType=INTEGER}, #{actionResult,jdbcType=VARCHAR}, 
-      #{message,jdbcType=VARCHAR}, #{actionTimestamp,jdbcType=TIMESTAMP})
+    <insert id="insert" parameterType="com.bwts.batchservice.entity.TaskDocLog" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        <selectKey order="AFTER" keyProperty="retryTime" resultType="int">
+            SELECT max(retry_time) FROM task_doc_log WHERE
+            flow_id = #{flowId,jdbcType=OTHER,typeHandler=UUIDTypeHandler}
+            AND tenant_id = #{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler}
+            AND document_id = #{documentId,jdbcType=OTHER,typeHandler=UUIDTypeHandler}
+            AND task_doc_log.phase = #{phase,jdbcType=VARCHAR}
+        </selectKey>
+    INSERT INTO task_doc_log (flow_id, tenant_id,
+                              document_id, phase, retry_time,
+                              action_result, message
+    ) VALUES (#{flowId,jdbcType=OTHER,typeHandler=UUIDTypeHandler}, #{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
+              #{documentId,jdbcType=OTHER,typeHandler=UUIDTypeHandler}, #{phase,jdbcType=VARCHAR},
+              (SELECT CASE
+                      WHEN max(retry_time) IS NULL
+                        THEN 1
+                      ELSE max(retry_time) + 1
+                      END
+               FROM task_doc_log
+               WHERE flow_id = #{flowId,jdbcType=OTHER,typeHandler=UUIDTypeHandler}
+                     AND tenant_id = #{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler}
+                     AND document_id = #{documentId,jdbcType=OTHER,typeHandler=UUIDTypeHandler}
+                     AND task_doc_log.phase = #{phase,jdbcType=VARCHAR})
+      , #{actionResult,jdbcType=VARCHAR}, #{message,jdbcType=VARCHAR})
   </insert>
-  <insert id="insertSelective" parameterType="TaskDocLog" >
-    insert into task_doc_log
-    <trim prefix="(" suffix=")" suffixOverrides="," >
-      <if test="id != null" >
-        id,
-      </if>
-      <if test="tenantId != null" >
-        tenant_id,
-      </if>
-      <if test="documentId != null" >
-        document_id,
-      </if>
-      <if test="phase != null" >
-        phase,
-      </if>
-      <if test="retryTime != null" >
-        retry_time,
-      </if>
-      <if test="actionResult != null" >
-        action_result,
-      </if>
-      <if test="message != null" >
-        message,
-      </if>
-      <if test="actionTimestamp != null" >
-        action_timestamp,
-      </if>
-    </trim>
-    <trim prefix="values (" suffix=")" suffixOverrides="," >
-      <if test="id != null" >
-        #{id,jdbcType=BIGINT},
-      </if>
-      <if test="tenantId != null" >
-        #{tenantId,typeHandler=UUIDTypeHandler},
-      </if>
-      <if test="documentId != null" >
-        #{documentId,typeHandler=UUIDTypeHandler},
-      </if>
-      <if test="phase != null" >
-        #{phase,jdbcType=VARCHAR},
-      </if>
-      <if test="retryTime != null" >
-        #{retryTime,jdbcType=INTEGER},
-      </if>
-      <if test="actionResult != null" >
-        #{actionResult,jdbcType=VARCHAR},
-      </if>
-      <if test="message != null" >
-        #{message,jdbcType=VARCHAR},
-      </if>
-      <if test="actionTimestamp != null" >
-        #{actionTimestamp,jdbcType=TIMESTAMP},
-      </if>
-    </trim>
-  </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="TaskDocLog" >
-    update task_doc_log
-    <set >
-      <if test="tenantId != null" >
-        tenant_id = #{tenantId,typeHandler=UUIDTypeHandler},
-      </if>
-      <if test="documentId != null" >
-        document_id = #{documentId,typeHandler=UUIDTypeHandler},
-      </if>
-      <if test="phase != null" >
-        phase = #{phase,jdbcType=VARCHAR},
-      </if>
-      <if test="retryTime != null" >
-        retry_time = #{retryTime,jdbcType=INTEGER},
-      </if>
-      <if test="actionResult != null" >
-        action_result = #{actionResult,jdbcType=VARCHAR},
-      </if>
-      <if test="message != null" >
-        message = #{message,jdbcType=VARCHAR},
-      </if>
-      <if test="actionTimestamp != null" >
-        action_timestamp = #{actionTimestamp,jdbcType=TIMESTAMP},
-      </if>
-    </set>
-    where id = #{id,jdbcType=BIGINT}
-  </update>
-  <update id="updateByPrimaryKey" parameterType="TaskDocLog" >
-    update task_doc_log
-    set tenant_id = #{tenantId,typeHandler=UUIDTypeHandler},
-      document_id = #{documentId,typeHandler=UUIDTypeHandler},
-      phase = #{phase,jdbcType=VARCHAR},
-      retry_time = #{retryTime,jdbcType=INTEGER},
-      action_result = #{actionResult,jdbcType=VARCHAR},
-      message = #{message,jdbcType=VARCHAR},
-      action_timestamp = #{actionTimestamp,jdbcType=TIMESTAMP}
-    where id = #{id,jdbcType=BIGINT}
-  </update>
 </mapper>

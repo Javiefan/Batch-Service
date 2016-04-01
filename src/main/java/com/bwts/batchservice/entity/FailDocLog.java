@@ -6,6 +6,8 @@ import java.util.UUID;
 public class FailDocLog {
     private Long id;
 
+    private UUID flowId;
+
     private UUID tenantId;
 
     private UUID documentId;
@@ -24,6 +26,14 @@ public class FailDocLog {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public UUID getFlowId() {
+        return flowId;
+    }
+
+    public void setFlowId(UUID flowId) {
+        this.flowId = flowId;
     }
 
     public UUID getTenantId() {
