@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,7 +21,6 @@ public class TaskDocLogDAOTest {
     @Autowired
     private TaskDocLogDAO taskDocLogDAO;
 
-    private UUID flowId = UUID.randomUUID();
     private UUID tenantId = UUID.randomUUID();
     private UUID documentId = UUID.randomUUID();
     private String phase = "PDF";
@@ -47,18 +47,18 @@ public class TaskDocLogDAOTest {
             this.taskDocLogDAO.insert(taskDocLog);
         }
 
-        List<TaskDocLog> list =  this.taskDocLogDAO.get(flowId,tenantId,documentId,phase);
+        List<TaskDocLog> list =  this.taskDocLogDAO.get(tenantId,documentId,phase);
         assertEquals("expect "+retryAttempt+" records, but get "+ list.size()+" records", retryAttempt,list.size());
     }
 
     private TaskDocLog getDummyDocLog(){
         TaskDocLog taskDocLog = new TaskDocLog();
-        taskDocLog.setFlowId(flowId);
         taskDocLog.setTenantId(tenantId);
         taskDocLog.setDocumentId(documentId);
         taskDocLog.setActionResult("FAIL");
         taskDocLog.setPhase(phase);
         taskDocLog.setMessage("123");
+        taskDocLog.setActionTimestamp(new Date());
         return taskDocLog;
     }
 }

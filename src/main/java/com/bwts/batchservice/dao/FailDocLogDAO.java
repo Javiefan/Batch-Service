@@ -4,4 +4,7 @@ import com.bwts.batchservice.entity.FailDocLog;
 
 public interface FailDocLogDAO {
     void insert(FailDocLog failDocLog);
+
+    FailDocLog get(long id);
+
 }

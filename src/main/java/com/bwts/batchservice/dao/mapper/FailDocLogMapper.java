@@ -5,7 +5,7 @@ import com.bwts.batchservice.entity.FailDocLog;
 public interface FailDocLogMapper {
     int deleteByPrimaryKey(Long id);
 
-    int insert(FailDocLog record);
+    void insert(FailDocLog record);
 
     int insertSelective(FailDocLog record);
 

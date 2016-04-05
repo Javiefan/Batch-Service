@@ -14,26 +14,22 @@ import java.util.UUID;
 @Repository
 public class MybatisTaskDocLogDAO implements TaskDocLogDAO{
 
-    private final TaskDocLogMapper taskDocLogMapper;
-
     @Autowired
-    public MybatisTaskDocLogDAO(TaskDocLogMapper taskDocLogMapper) {
-        this.taskDocLogMapper = taskDocLogMapper;
-    }
+    private TaskDocLogMapper taskDocLogMapper;
 
     @Override
     public int insert(TaskDocLog taskDocLog) {
-        this.taskDocLogMapper.insert(taskDocLog);
+        int result = taskDocLogMapper.insert(taskDocLog);
+        System.out.println(result);
         return taskDocLog.getRetryTime();
     }
 
     @Override
-    public List<TaskDocLog> get(UUID flowId, UUID tenantId, UUID documentId, String phase) {
+    public List<TaskDocLog> get(UUID tenantId, UUID documentId, String phase) {
         Map<String,Object> map = new HashMap<>();
-        map.put("flowId",flowId);
         map.put("tenantId",tenantId);
         map.put("documentId",documentId);
         map.put("phase",phase);
-        return this.taskDocLogMapper.selectDocLog(map);
+        return taskDocLogMapper.selectDocLog(map);
     }
 }

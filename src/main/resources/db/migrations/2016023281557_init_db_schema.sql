@@ -1,7 +1,6 @@
 DROP TABLE IF EXISTS task_doc_log;
 CREATE TABLE task_doc_log (
   id               BIGSERIAL PRIMARY KEY NOT NULL,
-  flow_id          UUID                  NOT NULL,
   tenant_id        UUID                  NOT NULL,
   document_id      UUID                  NOT NULL,
   phase            CHARACTER VARYING(16) NOT NULL,
@@ -18,7 +17,6 @@ DROP TABLE IF EXISTS fail_doc_log;
 CREATE TABLE fail_doc_log
 (
   id             BIGSERIAL PRIMARY KEY NOT NULL,
-  flow_id        UUID                  NOT NULL,
   tenant_id      UUID                  NOT NULL,
   document_id    UUID                  NOT NULL,
   phase          VARCHAR(16)           NOT NULL,

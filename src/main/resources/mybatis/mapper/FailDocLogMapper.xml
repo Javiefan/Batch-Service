@@ -3,7 +3,6 @@
 <mapper namespace="com.bwts.batchservice.dao.mapper.FailDocLogMapper" >
   <resultMap id="BaseResultMap" type="com.bwts.batchservice.entity.FailDocLog" >
     <id column="id" property="id" jdbcType="BIGINT" />
-    <result column="flow_id" property="flowId" typeHandler="UUIDTypeHandler" />
     <result column="tenant_id" property="tenantId" typeHandler="UUIDTypeHandler" />
     <result column="document_id" property="documentId" typeHandler="UUIDTypeHandler" />
     <result column="phase" property="phase" jdbcType="VARCHAR" />
@@ -12,7 +11,7 @@
     <result column="fail_timestamp" property="failTimestamp" jdbcType="TIMESTAMP" />
   </resultMap>
   <sql id="Base_Column_List" >
-    id, flow_id, tenant_id, document_id, phase, task_id, message, fail_timestamp
+    id, tenant_id, document_id, phase, task_id, message, fail_timestamp
   </sql>
   <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
     select 
@@ -25,10 +24,10 @@
     where id = #{id,jdbcType=BIGINT}
   </delete>
   <insert id="insert" parameterType="com.bwts.batchservice.entity.FailDocLog">
-    insert into fail_doc_log (flow_id, tenant_id,
+    insert into fail_doc_log (tenant_id,
       document_id, phase, task_id, 
       message, fail_timestamp)
-    values (#{flowId,jdbcType=OTHER,typeHandler=UUIDTypeHandler}, #{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
+    values (#{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
       #{documentId,jdbcType=OTHER,typeHandler=UUIDTypeHandler}, #{phase,jdbcType=VARCHAR}, #{taskId,jdbcType=BIGINT},
       #{message,jdbcType=VARCHAR}, #{failTimestamp,jdbcType=TIMESTAMP})
   </insert>
@@ -37,9 +36,6 @@
     <trim prefix="(" suffix=")" suffixOverrides="," >
       <if test="id != null" >
         id,
-      </if>
-      <if test="flowId != null" >
-        flow_id,
       </if>
       <if test="tenantId != null" >
         tenant_id,
@@ -64,9 +60,6 @@
       <if test="id != null" >
         #{id,jdbcType=BIGINT},
       </if>
-      <if test="flowId != null" >
-        #{flowId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
-      </if>
       <if test="tenantId != null" >
         #{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
       </if>
@@ -90,9 +83,6 @@
   <update id="updateByPrimaryKeySelective" parameterType="com.bwts.batchservice.entity.FailDocLog" >
     update fail_doc_log
     <set >
-      <if test="flowId != null" >
-        flow_id = #{flowId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
-      </if>
       <if test="tenantId != null" >
         tenant_id = #{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
       </if>
@@ -116,8 +106,7 @@
   </update>
   <update id="updateByPrimaryKey" parameterType="com.bwts.batchservice.entity.FailDocLog" >
     update fail_doc_log
-    set flow_id = #{flowId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
-      tenant_id = #{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
+    set tenant_id = #{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
       document_id = #{documentId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
       phase = #{phase,jdbcType=VARCHAR},
       task_id = #{taskId,jdbcType=BIGINT},

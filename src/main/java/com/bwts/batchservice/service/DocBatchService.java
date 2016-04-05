@@ -1,11 +1,11 @@
 package com.bwts.batchservice.service;
 
-import com.bwts.batchservice.dao.impl.MyBatisFailDocLogDAO;
+import com.bwts.batchservice.dao.impl.MybatisFailDocLogDAO;
 import com.bwts.batchservice.dao.impl.MybatisTaskDocLogDAO;
 import com.bwts.batchservice.dto.DocLogDTO;
 import com.bwts.batchservice.entity.FailDocLog;
 import com.bwts.batchservice.entity.TaskDocLog;
-import com.bwts.common.batch.BatchMessage;
+import com.bwts.common.kafka.message.InvoiceMessage;
 import com.bwts.common.kafka.producer.KafkaMessageProducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
-import java.util.UUID;
 
 @Service
 @Transactional
@@ -23,9 +22,9 @@ public class DocBatchService {
     private static final Logger LOGGER = LoggerFactory.getLogger(DocBatchService.class);
 
     @Autowired
-    private final KafkaMessageProducer kafkaMessageProducer;
+    private KafkaMessageProducer kafkaMessageProducer;
     private final MybatisTaskDocLogDAO taskDocLogDAO;
-    private final MyBatisFailDocLogDAO failDocLogDAO;
+    private final MybatisFailDocLogDAO failDocLogDAO;
 
     @Value("${batch.disabled}")
     private boolean batchDisabled;
@@ -34,11 +33,10 @@ public class DocBatchService {
     private final String producerTopic;
 
     @Autowired
-    public DocBatchService(KafkaMessageProducer kafkaMessageProducer,
-                           MybatisTaskDocLogDAO taskDocLogDAO,
-                           MyBatisFailDocLogDAO failDocLogDAO,
+    public DocBatchService(MybatisTaskDocLogDAO taskDocLogDAO,
+                           MybatisFailDocLogDAO failDocLogDAO,
                            @Value("${batch.max.retry}") int maxRetryCount,
-                           @Value("${producer.batch.topic}") String producerTopic) {
+                           @Value("${consumer.invoice.topic}") String producerTopic) {
         this.taskDocLogDAO = taskDocLogDAO;
         this.failDocLogDAO = failDocLogDAO;
         this.maxRetryCount = maxRetryCount;
@@ -57,26 +55,20 @@ public class DocBatchService {
                 return;
             } else {
                 saveTaskDoc(docLogDTO);
-                //!!!
-                docLogDTO.setRetryTimes(docLogDTO.getRetryTimes());
             }
         } catch(Exception e) {
             LOGGER.info("save doc failure with some exceptions, put task into kafka again");
-            //!!!
         }
 
         retry(docLogDTO);
     }
 
     private void retry(DocLogDTO docLogDTO) {
-        BatchMessage.BatchMessageBuilder messageBuilder = new BatchMessage.BatchMessageBuilder();
+        InvoiceMessage.InvoiceMessgeBuilder messageBuilder = new InvoiceMessage.InvoiceMessgeBuilder();
 
-        BatchMessage message = messageBuilder
-                .withTenantId(docLogDTO.getTenantId())
+        InvoiceMessage message = messageBuilder
                 .withDocumentId(docLogDTO.getDocumentId())
-                .withPayload(docLogDTO.getPayload())
-                .withPhase(docLogDTO.getPhase())
-                .withThrowTime(docLogDTO.getThrowTime())
+                .withInvoiceData(docLogDTO.getPayload())
                 .build();
         kafkaMessageProducer.send(producerTopic, message);
     }
@@ -84,25 +76,22 @@ public class DocBatchService {
     @Transactional
     private void saveTaskDoc(DocLogDTO docLogDTO) {
 
-        LOGGER.info("tenant: {} document: {} {}th times, max times {}", docLogDTO.getTenantId(), docLogDTO.getDocumentId(), maxRetryCount);
+        LOGGER.info("tenant: {} document: {} {}th times, max times {}", docLogDTO.getTenantId(), docLogDTO.getDocumentId(), docLogDTO.getRetryTimes(), maxRetryCount);
         TaskDocLog taskDocLog = new TaskDocLog();
         taskDocLog.setTenantId(docLogDTO.getTenantId());
         taskDocLog.setDocumentId(docLogDTO.getDocumentId());
         taskDocLog.setPhase(docLogDTO.getPhase());
-        taskDocLog.setRetryTime(getTriedTimes(docLogDTO.getTenantId(), docLogDTO.getDocumentId()));
+        taskDocLog.setRetryTime(docLogDTO.getRetryTimes());
 
         taskDocLog.setMessage(docLogDTO.getMessage());
         taskDocLog.setActionResult(docLogDTO.getActionResult());
-        taskDocLog.setActionTimestamp(new Date());
+        taskDocLog.setActionTimestamp(docLogDTO.getThrowTime());
 
-        taskDocLogDAO.insert(taskDocLog);
+        int retryTimes = taskDocLogDAO.insert(taskDocLog);
+
+        docLogDTO.setRetryTimes(retryTimes);
+
     }
-
-    @Transactional
-    public int getTriedTimes(UUID tenantId, UUID documentId) {
-        return taskDocLogDAO.get(tenantId, documentId).size();
-    }
-
 
     @Transactional
     public void saveFailDoc(DocLogDTO docLogDTO) {

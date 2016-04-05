@@ -19,7 +19,7 @@ public class DocLogConsumer extends ConsumerAbstractHandler<BatchMessage> {
 
         @Autowired
         public DocLogConsumer(DocBatchService docBatchService,
-                              @Value("#{'${producer.batch.topic}'}") String topic,
+                              @Value("#{'${consumer.batch.topic}'}") String topic,
                               @Value("#{'${consumer.batch.threads}'}") Integer threadCount) {
             super(topic, threadCount);
             this.docBatchService = docBatchService;
@@ -37,14 +37,9 @@ public class DocLogConsumer extends ConsumerAbstractHandler<BatchMessage> {
                     .setThrowTime(message.getThrowTime())
                     .build();
 
-            // !!! message
+            // for extensibility
             docLogDTO.setMessage("");
             docLogDTO.setActionResult("Failure");
-            // !!!
-            if(docBatchService.getTriedTimes(message.getTenantId(), message.getDocumentId()) == 0) {
-                docLogDTO.setRetryTimes(0);
-            }
-
 
             docBatchService.processDocWithRetry(docLogDTO);
         }
