@@ -183,6 +183,11 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.bwts</groupId>
+            <artifactId>tenant-document-core</artifactId>
+            <version>1.0.0-SNAPSHOT-add_document_status-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
 </project>

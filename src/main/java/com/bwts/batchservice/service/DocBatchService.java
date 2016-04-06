@@ -3,6 +3,8 @@ package com.bwts.batchservice.service;
 import com.bwts.batchservice.dao.impl.MybatisFailDocLogDAO;
 import com.bwts.batchservice.dao.impl.MybatisTaskDocLogDAO;
 import com.bwts.batchservice.dto.DocLogDTO;
+import com.bwts.batchservice.dto.DocumentStatusDTO;
+import com.bwts.batchservice.dto.DocumentStatusListDTO;
 import com.bwts.batchservice.entity.FailDocLog;
 import com.bwts.batchservice.entity.TaskDocLog;
 import com.bwts.common.kafka.message.InvoiceMessage;
@@ -11,8 +13,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.Date;
 
@@ -107,6 +111,32 @@ public class DocBatchService {
         failDocLog.setFailTimestamp(new Date());
 
         failDocLogDAO.insert(failDocLog);
+    }
+
+    @Scheduled(fixedRate = 5000)
+    public void pullBatchService() {
+        LOGGER.info("begin pull batch job");
+        RestTemplate restTemplate = new RestTemplate();
+        DocumentStatusListDTO failedJobList = restTemplate.getForObject("http://localhost:19921/documents/failed",DocumentStatusListDTO.class);
+
+        for(DocumentStatusDTO document: failedJobList.getUblDataList()) {
+            if(document.getUblData() == null) {
+                continue;
+            }
+            DocLogDTO docLogDTO = new DocLogDTO.Builder()
+                    .setTenantId(document.getTenantId())
+                    .setDocumentId(document.getDocumentId())
+                    .setPayload(document.getUblData())
+                    .setThrowTime(new Date())
+                    .build();
+            docLogDTO.setPhase("Unknown");
+
+
+            processDocWithRetry(docLogDTO);
+        }
+
+        LOGGER.info("end pull batch job");
+
     }
 
 }
