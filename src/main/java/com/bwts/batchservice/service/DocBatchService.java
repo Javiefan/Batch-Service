@@ -25,7 +25,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Date;
-import java.util.Iterator;
 
 @Service
 @Transactional
@@ -48,6 +47,7 @@ public class DocBatchService {
 
     private final int maxRetryCount;
     private final String producerTopic;
+
 
     @Autowired
     public DocBatchService(MybatisTaskDocLogDAO taskDocLogDAO,
@@ -93,7 +93,7 @@ public class DocBatchService {
     @Transactional
     private void saveTaskDoc(DocLogDTO docLogDTO) {
 
-        LOGGER.info("tenant: {} document: {} {}th times, max times {}", docLogDTO.getTenantId(),
+        LOGGER.info("tenant: {}  document: {}   has tried {}th times, max times {}", docLogDTO.getTenantId(),
                 docLogDTO.getDocumentId(), docLogDTO.getRetryTimes(), maxRetryCount);
         TaskDocLog taskDocLog = new TaskDocLog();
         taskDocLog.setTenantId(docLogDTO.getTenantId());
@@ -105,15 +105,12 @@ public class DocBatchService {
         taskDocLog.setActionResult(docLogDTO.getActionResult());
         taskDocLog.setActionTimestamp(docLogDTO.getThrowTime());
 
-        int retryTimes = taskDocLogDAO.insert(taskDocLog);
-
-        docLogDTO.setRetryTimes(retryTimes);
-
+        taskDocLogDAO.insert(taskDocLog);
     }
 
     @Transactional
     public void saveFailDoc(DocLogDTO docLogDTO) {
-        LOGGER.info("tenant: {} document: {} has tried more than {} times. stopping trying", docLogDTO.getTenantId(),
+        LOGGER.info("tenant: {}  document: {}   has tried more than {} times. stopping trying", docLogDTO.getTenantId(),
                 docLogDTO.getDocumentId(), maxRetryCount);
         FailDocLog failDocLog = new FailDocLog();
 
@@ -128,10 +125,16 @@ public class DocBatchService {
         failDocLogDAO.insert(failDocLog);
     }
 
+    @Transactional
+    public int getRetriedTimes(DocLogDTO docLogDTO) {
+        return taskDocLogDAO.get(docLogDTO.getTenantId(), docLogDTO.getDocumentId(), docLogDTO.getPhase()).size();
+    }
+
+
     @Scheduled(fixedRateString = "${scheduler.pull.interval}", initialDelay = 5000)
     public void pullBatchService() {
-        LOGGER.info("begin pull batch job");
-        int curIdx = 1;
+        LOGGER.info("begin pull batch job {}", new Date());
+        int pageNum = 1;
         int pageSize = 20;
         boolean isContinue = true;
         HttpHeaders headers = new HttpHeaders();
@@ -139,16 +142,21 @@ public class DocBatchService {
         headers.add(HEADER_TENANT_ID, DefaultTenants.ANONYMOUS_TENANT.toString());
         HttpEntity entity = new HttpEntity(headers);
         while (isContinue) {
-            String failedDocAddr = StringUtils.replace(failedUrlTmpl, "{startIdx}", String.valueOf(curIdx));
-            failedDocAddr = StringUtils.replace(failedDocAddr, "{count}", String.valueOf(pageSize));
+            String failedDocAddr = StringUtils.replace(failedUrlTmpl, "{pageNum}", String.valueOf(pageNum++));
+            failedDocAddr = StringUtils.replace(failedDocAddr, "{pageSize}", String.valueOf(pageSize));
             RestTemplate restTemplate = new RestTemplate();
             ResponseEntity<DocumentStatusListDTO> responseEntity =
                     restTemplate.exchange(failedDocAddr, HttpMethod.GET, entity, DocumentStatusListDTO.class);
+
             DocumentStatusListDTO failedJobList = responseEntity.getBody();
-            if (failedJobList != null && failedJobList.getTotalResults() > 0
-                    && failedJobList.getUblDataList() != null) {
-                for (DocumentStatusDTO document : failedJobList.getUblDataList()) {
+
+            LOGGER.info("have fetched failed job!");
+
+            if (failedJobList != null && failedJobList.getTotalCount() > 0
+                    && failedJobList.getItems() != null) {
+                for (DocumentStatusDTO document : failedJobList.getItems()) {
                     if (document.getUblData() == null) {
+                        LOGGER.info("ubldata is empty, can not send to kafka!");
                         continue;
                     }
                     DocLogDTO docLogDTO = new DocLogDTO.Builder()
@@ -157,15 +165,17 @@ public class DocBatchService {
                             .setPayload(document.getUblData())
                             .setThrowTime(new Date())
                             .build();
+
                     docLogDTO.setPhase("Unknown");
+                    docLogDTO.setRetryTimes(getRetriedTimes(docLogDTO));
+
                     processDocWithRetry(docLogDTO);
                 }
-                curIdx += pageSize;
             } else {
                 isContinue = false;
             }
         }
-        LOGGER.info("end pull batch job");
+        LOGGER.info("end pull batch job {}", new Date());
     }
 
 }

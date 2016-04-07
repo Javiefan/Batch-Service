@@ -4,25 +4,31 @@ package com.bwts.batchservice.dto;
 import java.util.List;
 
 public class DocumentStatusListDTO {
-    private int totalResults;
-    private int itemsPerPage;
-    private int startIndex;
+    private int totalCount;
+    private int pageSize;
+    private int pageNum;
+    private int totalPages;
 
-    private List<DocumentStatusDTO> ublDataList;
-
-    public int getTotalResults() {
-        return totalResults;
+    public int getTotalPages() {
+        return totalPages;
     }
 
-    public int getItemsPerPage() {
-        return itemsPerPage;
+    private List<DocumentStatusDTO> items;
+
+    public int getTotalCount() {
+        return totalCount;
     }
 
-    public int getStartIndex() {
-        return startIndex;
+    public int getPageSize() {
+        return pageSize;
     }
 
-    public List<DocumentStatusDTO> getUblDataList() {
-        return ublDataList;
+    public int getPageNum() {
+        return pageNum;
+    }
+
+
+    public List<DocumentStatusDTO> getItems() {
+        return items;
     }
 }

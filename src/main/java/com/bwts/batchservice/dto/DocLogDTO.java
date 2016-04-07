@@ -95,9 +95,6 @@ public class DocLogDTO {
     }
 
 
-
-
-
     public static class Builder {
         private DocLogDTO docLogDTO = new DocLogDTO();
 

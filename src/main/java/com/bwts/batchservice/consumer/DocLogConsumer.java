@@ -41,6 +41,8 @@ public class DocLogConsumer extends ConsumerAbstractHandler<BatchMessage> {
             docLogDTO.setMessage("");
             docLogDTO.setActionResult("Failure");
 
+            docLogDTO.setRetryTimes(docBatchService.getRetriedTimes(docLogDTO));
+
             docBatchService.processDocWithRetry(docLogDTO);
         }
 }
