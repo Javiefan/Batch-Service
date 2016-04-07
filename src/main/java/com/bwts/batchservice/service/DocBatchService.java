@@ -9,21 +9,31 @@ import com.bwts.batchservice.entity.FailDocLog;
 import com.bwts.batchservice.entity.TaskDocLog;
 import com.bwts.common.kafka.message.InvoiceMessage;
 import com.bwts.common.kafka.producer.KafkaMessageProducer;
+import com.bwts.common.security.DefaultTenants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Date;
+import java.util.Iterator;
 
 @Service
 @Transactional
 public class DocBatchService {
     private static final Logger LOGGER = LoggerFactory.getLogger(DocBatchService.class);
+
+    private static final String HEADER_USER_ID = "X-BWTS-UserId";
+    private static final String HEADER_TENANT_ID = "X-BWTS-TenantId";
 
     @Autowired
     private KafkaMessageProducer kafkaMessageProducer;
@@ -33,14 +43,17 @@ public class DocBatchService {
     @Value("${batch.disabled}")
     private boolean batchDisabled;
 
+    @Value("${tenant.document.failurl}")
+    private String failedUrlTmpl;
+
     private final int maxRetryCount;
     private final String producerTopic;
 
     @Autowired
     public DocBatchService(MybatisTaskDocLogDAO taskDocLogDAO,
-                           MybatisFailDocLogDAO failDocLogDAO,
-                           @Value("${batch.max.retry}") int maxRetryCount,
-                           @Value("${consumer.invoice.topic}") String producerTopic) {
+            MybatisFailDocLogDAO failDocLogDAO,
+            @Value("${batch.max.retry}") int maxRetryCount,
+            @Value("${consumer.invoice.topic}") String producerTopic) {
         this.taskDocLogDAO = taskDocLogDAO;
         this.failDocLogDAO = failDocLogDAO;
         this.maxRetryCount = maxRetryCount;
@@ -54,13 +67,13 @@ public class DocBatchService {
         }
 
         try {
-            if(docLogDTO.getRetryTimes() >= maxRetryCount) {
+            if (docLogDTO.getRetryTimes() >= maxRetryCount) {
                 saveFailDoc(docLogDTO);
                 return;
             } else {
                 saveTaskDoc(docLogDTO);
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             LOGGER.info("save doc failure with some exceptions, put task into kafka again");
         }
 
@@ -80,7 +93,8 @@ public class DocBatchService {
     @Transactional
     private void saveTaskDoc(DocLogDTO docLogDTO) {
 
-        LOGGER.info("tenant: {} document: {} {}th times, max times {}", docLogDTO.getTenantId(), docLogDTO.getDocumentId(), docLogDTO.getRetryTimes(), maxRetryCount);
+        LOGGER.info("tenant: {} document: {} {}th times, max times {}", docLogDTO.getTenantId(),
+                docLogDTO.getDocumentId(), docLogDTO.getRetryTimes(), maxRetryCount);
         TaskDocLog taskDocLog = new TaskDocLog();
         taskDocLog.setTenantId(docLogDTO.getTenantId());
         taskDocLog.setDocumentId(docLogDTO.getDocumentId());
@@ -99,7 +113,8 @@ public class DocBatchService {
 
     @Transactional
     public void saveFailDoc(DocLogDTO docLogDTO) {
-        LOGGER.info("tenant: {} document: {} has tried more than {} times. stopping trying", docLogDTO.getTenantId(), docLogDTO.getDocumentId(), maxRetryCount);
+        LOGGER.info("tenant: {} document: {} has tried more than {} times. stopping trying", docLogDTO.getTenantId(),
+                docLogDTO.getDocumentId(), maxRetryCount);
         FailDocLog failDocLog = new FailDocLog();
 
         failDocLog.setTenantId(docLogDTO.getTenantId());
@@ -113,30 +128,44 @@ public class DocBatchService {
         failDocLogDAO.insert(failDocLog);
     }
 
-    @Scheduled(fixedRate = 5000)
+    @Scheduled(fixedRateString = "${scheduler.pull.interval}", initialDelay = 5000)
     public void pullBatchService() {
         LOGGER.info("begin pull batch job");
-        RestTemplate restTemplate = new RestTemplate();
-        DocumentStatusListDTO failedJobList = restTemplate.getForObject("http://localhost:19921/documents/failed",DocumentStatusListDTO.class);
-
-        for(DocumentStatusDTO document: failedJobList.getUblDataList()) {
-            if(document.getUblData() == null) {
-                continue;
+        int curIdx = 1;
+        int pageSize = 20;
+        boolean isContinue = true;
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HEADER_USER_ID, DefaultTenants.ANONYMOUS_USER.toString());
+        headers.add(HEADER_TENANT_ID, DefaultTenants.ANONYMOUS_TENANT.toString());
+        HttpEntity entity = new HttpEntity(headers);
+        while (isContinue) {
+            String failedDocAddr = StringUtils.replace(failedUrlTmpl, "{startIdx}", String.valueOf(curIdx));
+            failedDocAddr = StringUtils.replace(failedDocAddr, "{count}", String.valueOf(pageSize));
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseEntity<DocumentStatusListDTO> responseEntity =
+                    restTemplate.exchange(failedDocAddr, HttpMethod.GET, entity, DocumentStatusListDTO.class);
+            DocumentStatusListDTO failedJobList = responseEntity.getBody();
+            if (failedJobList != null && failedJobList.getTotalResults() > 0
+                    && failedJobList.getUblDataList() != null) {
+                for (DocumentStatusDTO document : failedJobList.getUblDataList()) {
+                    if (document.getUblData() == null) {
+                        continue;
+                    }
+                    DocLogDTO docLogDTO = new DocLogDTO.Builder()
+                            .setTenantId(document.getTenantId())
+                            .setDocumentId(document.getDocumentId())
+                            .setPayload(document.getUblData())
+                            .setThrowTime(new Date())
+                            .build();
+                    docLogDTO.setPhase("Unknown");
+                    processDocWithRetry(docLogDTO);
+                }
+                curIdx += pageSize;
+            } else {
+                isContinue = false;
             }
-            DocLogDTO docLogDTO = new DocLogDTO.Builder()
-                    .setTenantId(document.getTenantId())
-                    .setDocumentId(document.getDocumentId())
-                    .setPayload(document.getUblData())
-                    .setThrowTime(new Date())
-                    .build();
-            docLogDTO.setPhase("Unknown");
-
-
-            processDocWithRetry(docLogDTO);
         }
-
         LOGGER.info("end pull batch job");
-
     }
 
 }
