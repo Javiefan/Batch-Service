@@ -10,6 +10,7 @@ import com.bwts.batchservice.entity.TaskDocLog;
 import com.bwts.common.kafka.message.InvoiceMessage;
 import com.bwts.common.kafka.producer.KafkaMessageProducer;
 import com.bwts.common.security.DefaultTenants;
+import com.bwts.common.security.UserContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -131,7 +133,7 @@ public class DocBatchService {
     }
 
 
-    @Scheduled(fixedRateString = "${scheduler.pull.interval}", initialDelay = 5000)
+    @Scheduled(fixedRateString = "${scheduler.pull.interval}", initialDelay = 15 * 60 * 1000)
     public void pullBatchService() {
         LOGGER.info("begin pull batch job {}", new Date());
         int pageNum = 1;
@@ -168,6 +170,8 @@ public class DocBatchService {
 
                     docLogDTO.setPhase("Unknown");
                     docLogDTO.setRetryTimes(getRetriedTimes(docLogDTO));
+
+                    SecurityContextHolder.setContext(new UserContext(null, docLogDTO.getTenantId()));
 
                     processDocWithRetry(docLogDTO);
                 }
