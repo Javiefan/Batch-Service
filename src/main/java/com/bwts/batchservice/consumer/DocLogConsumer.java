@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-@Component
 public class DocLogConsumer extends ConsumerAbstractHandler<BatchMessage> {
 
         private static final Logger LOGGER = LoggerFactory.getLogger(DocLogConsumer.class);
@@ -22,8 +21,8 @@ public class DocLogConsumer extends ConsumerAbstractHandler<BatchMessage> {
 
         @Autowired
         public DocLogConsumer(DocBatchService docBatchService,
-                              @Value("#{'${consumer.batch.topic}'}") String topic,
-                              @Value("#{'${consumer.batch.threads}'}") Integer threadCount) {
+                              @Value("#{'${kafka.consumer.topic.batch.name}'}") String topic,
+                              @Value("#{'${kafka.consumer.topic.batch.threads}'}") Integer threadCount) {
             super(topic, threadCount);
             this.docBatchService = docBatchService;
         }

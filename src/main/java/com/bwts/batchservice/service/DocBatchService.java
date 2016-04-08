@@ -55,7 +55,7 @@ public class DocBatchService {
     public DocBatchService(MybatisTaskDocLogDAO taskDocLogDAO,
             MybatisFailDocLogDAO failDocLogDAO,
             @Value("${batch.max.retry}") int maxRetryCount,
-            @Value("${consumer.invoice.topic}") String producerTopic) {
+            @Value("${kafka.producer.topic.invoice}") String producerTopic) {
         this.taskDocLogDAO = taskDocLogDAO;
         this.failDocLogDAO = failDocLogDAO;
         this.maxRetryCount = maxRetryCount;
@@ -133,7 +133,7 @@ public class DocBatchService {
     }
 
 
-    @Scheduled(fixedRateString = "${scheduler.pull.interval}", initialDelay = 15 * 60 * 1000)
+    @Scheduled(fixedRateString = "${sender.scheduler.pull.interval}", initialDelay = 15 * 600)
     public void pullBatchService() {
         LOGGER.info("begin pull batch job {}", new Date());
         int pageNum = 1;
