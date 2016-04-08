@@ -6,7 +6,7 @@
     <result column="tenant_id" property="tenantId" typeHandler="UUIDTypeHandler" />
     <result column="document_id" property="documentId" typeHandler="UUIDTypeHandler" />
     <result column="phase" property="phase" jdbcType="VARCHAR" />
-    <result column="task_id" property="taskId" jdbcType="INTEGER" />
+    <result column="task_id" property="taskId" jdbcType="BIGINT" />
     <result column="message" property="message" jdbcType="VARCHAR" />
     <result column="fail_timestamp" property="failTimestamp" jdbcType="TIMESTAMP" />
   </resultMap>
@@ -23,15 +23,15 @@
     delete from fail_doc_log
     where id = #{id,jdbcType=BIGINT}
   </delete>
-  <insert id="insert" parameterType="FailDocLog" >
-    insert into fail_doc_log (id, tenant_id, document_id, 
-      phase, task_id, message, 
-      fail_timestamp)
-    values (#{id,jdbcType=BIGINT}, #{tenantId,typeHandler=UUIDTypeHandler}, #{documentId,typeHandler=UUIDTypeHandler}, 
-      #{phase,jdbcType=VARCHAR}, #{taskId,jdbcType=INTEGER}, #{message,jdbcType=VARCHAR}, 
-      #{failTimestamp,jdbcType=TIMESTAMP})
+  <insert id="insert" parameterType="com.bwts.batchservice.entity.FailDocLog">
+    insert into fail_doc_log (tenant_id,
+      document_id, phase, task_id, 
+      message, fail_timestamp)
+    values (#{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
+      #{documentId,jdbcType=OTHER,typeHandler=UUIDTypeHandler}, #{phase,jdbcType=VARCHAR}, #{taskId,jdbcType=BIGINT},
+      #{message,jdbcType=VARCHAR}, #{failTimestamp,jdbcType=TIMESTAMP})
   </insert>
-  <insert id="insertSelective" parameterType="FailDocLog" >
+  <insert id="insertSelective" parameterType="com.bwts.batchservice.entity.FailDocLog" >
     insert into fail_doc_log
     <trim prefix="(" suffix=")" suffixOverrides="," >
       <if test="id != null" >
@@ -61,16 +61,16 @@
         #{id,jdbcType=BIGINT},
       </if>
       <if test="tenantId != null" >
-        #{tenantId,typeHandler=UUIDTypeHandler},
+        #{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
       </if>
       <if test="documentId != null" >
-        #{documentId,typeHandler=UUIDTypeHandler},
+        #{documentId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
       </if>
       <if test="phase != null" >
         #{phase,jdbcType=VARCHAR},
       </if>
       <if test="taskId != null" >
-        #{taskId,jdbcType=INTEGER},
+        #{taskId,jdbcType=BIGINT},
       </if>
       <if test="message != null" >
         #{message,jdbcType=VARCHAR},
@@ -80,20 +80,20 @@
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="FailDocLog" >
+  <update id="updateByPrimaryKeySelective" parameterType="com.bwts.batchservice.entity.FailDocLog" >
     update fail_doc_log
     <set >
       <if test="tenantId != null" >
-        tenant_id = #{tenantId,typeHandler=UUIDTypeHandler},
+        tenant_id = #{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
       </if>
       <if test="documentId != null" >
-        document_id = #{documentId,typeHandler=UUIDTypeHandler},
+        document_id = #{documentId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
       </if>
       <if test="phase != null" >
         phase = #{phase,jdbcType=VARCHAR},
       </if>
       <if test="taskId != null" >
-        task_id = #{taskId,jdbcType=INTEGER},
+        task_id = #{taskId,jdbcType=BIGINT},
       </if>
       <if test="message != null" >
         message = #{message,jdbcType=VARCHAR},
@@ -104,12 +104,12 @@
     </set>
     where id = #{id,jdbcType=BIGINT}
   </update>
-  <update id="updateByPrimaryKey" parameterType="FailDocLog" >
+  <update id="updateByPrimaryKey" parameterType="com.bwts.batchservice.entity.FailDocLog" >
     update fail_doc_log
-    set tenant_id = #{tenantId,typeHandler=UUIDTypeHandler},
-      document_id = #{documentId,typeHandler=UUIDTypeHandler},
+    set tenant_id = #{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
+      document_id = #{documentId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
       phase = #{phase,jdbcType=VARCHAR},
-      task_id = #{taskId,jdbcType=INTEGER},
+      task_id = #{taskId,jdbcType=BIGINT},
       message = #{message,jdbcType=VARCHAR},
       fail_timestamp = #{failTimestamp,jdbcType=TIMESTAMP}
     where id = #{id,jdbcType=BIGINT}

@@ -6,9 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface TaskDocLogDAO {
-    void insert(TaskDocLog taskDocLog);
+    int insert(TaskDocLog taskDocLog);
 
-    List<TaskDocLog> get(UUID tenantId, UUID documentId);
-
-    List<TaskDocLog> get(UUID tenantId);
+    List<TaskDocLog> get(UUID tenantId,UUID documentId,String phase);
 }

@@ -4,10 +4,13 @@ import com.bwts.batchservice.dto.DocLogDTO;
 import com.bwts.batchservice.service.DocBatchService;
 import com.bwts.common.batch.BatchMessage;
 import com.bwts.common.kafka.consumer.ConsumerAbstractHandler;
+import com.bwts.common.security.UserContext;
+import com.bwts.common.security.utils.UserContextUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -19,7 +22,7 @@ public class DocLogConsumer extends ConsumerAbstractHandler<BatchMessage> {
 
         @Autowired
         public DocLogConsumer(DocBatchService docBatchService,
-                              @Value("#{'${producer.batch.topic}'}") String topic,
+                              @Value("#{'${consumer.batch.topic}'}") String topic,
                               @Value("#{'${consumer.batch.threads}'}") Integer threadCount) {
             super(topic, threadCount);
             this.docBatchService = docBatchService;
@@ -37,14 +40,13 @@ public class DocLogConsumer extends ConsumerAbstractHandler<BatchMessage> {
                     .setThrowTime(message.getThrowTime())
                     .build();
 
-            // !!! message
+            // for extensibility
             docLogDTO.setMessage("");
             docLogDTO.setActionResult("Failure");
-            // !!!
-            if(docBatchService.getTriedTimes(message.getTenantId(), message.getDocumentId()) == 0) {
-                docLogDTO.setRetryTimes(0);
-            }
 
+            docLogDTO.setRetryTimes(docBatchService.getRetriedTimes(docLogDTO));
+
+            SecurityContextHolder.setContext(new UserContext(null, docLogDTO.getTenantId()));
 
             docBatchService.processDocWithRetry(docLogDTO);
         }

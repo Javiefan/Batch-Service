@@ -1,6 +1,5 @@
 package com.bwts.batchservice.dto;
 
-import java.sql.Timestamp;
 import java.util.Date;
 import java.util.UUID;
 
@@ -11,7 +10,7 @@ public class DocLogDTO {
 
     private String phase;
 
-    private Object payload;
+    private String payload;
 
     private String actionResult;
 
@@ -35,7 +34,7 @@ public class DocLogDTO {
         return phase;
     }
 
-    public Object getPayload() {
+    public String getPayload() {
         return payload;
     }
 
@@ -71,7 +70,7 @@ public class DocLogDTO {
         this.phase = phase;
     }
 
-    public void setPayload(Object payload) {
+    public void setPayload(String payload) {
         this.payload = payload;
     }
 
@@ -96,9 +95,6 @@ public class DocLogDTO {
     }
 
 
-
-
-
     public static class Builder {
         private DocLogDTO docLogDTO = new DocLogDTO();
 
@@ -117,7 +113,7 @@ public class DocLogDTO {
             return this;
         }
 
-        public Builder setPayload(Object payload) {
+        public Builder setPayload(String payload) {
             docLogDTO.setPayload(payload);
             return this;
         }

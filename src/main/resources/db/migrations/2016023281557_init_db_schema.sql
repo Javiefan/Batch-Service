@@ -20,9 +20,10 @@ CREATE TABLE fail_doc_log
   tenant_id      UUID                  NOT NULL,
   document_id    UUID                  NOT NULL,
   phase          VARCHAR(16)           NOT NULL,
-  task_id        INTEGER,
+  task_id        BIGINT,
   message        VARCHAR,
-  fail_timestamp TIMESTAMP             NOT NULL DEFAULT 'now()'
+  fail_timestamp TIMESTAMP             NOT NULL DEFAULT 'now()',
+  CONSTRAINT fail_doc_log_task_doc_log_id_fk FOREIGN KEY (task_id) REFERENCES task_doc_log (id)
 );
 CREATE INDEX fail_doc_log_tenant_id_index ON fail_doc_log (tenant_id);
 CREATE INDEX fail_doc_log_document_id_index ON fail_doc_log (document_id);
