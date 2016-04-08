@@ -20,7 +20,6 @@ public class MybatisTaskDocLogDAO implements TaskDocLogDAO{
     @Override
     public int insert(TaskDocLog taskDocLog) {
         int result = taskDocLogMapper.insert(taskDocLog);
-        System.out.println(result);
         return taskDocLog.getRetryTime();
     }
 
