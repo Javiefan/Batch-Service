@@ -10,7 +10,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
-@ComponentScan("com.bwts.batchservice,com.bwts.common.kafka.consumer,com.bwts.common.kafka.producer")
+@ComponentScan("com.bwts.batchservice,com.bwts.common.kafka.producer")
 @EnableScheduling
 public class BootStrap extends SpringBootServletInitializer {
 
