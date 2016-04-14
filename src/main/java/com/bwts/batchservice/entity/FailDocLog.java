@@ -67,10 +67,10 @@ public class FailDocLog {
     }
 
     public Date getFailTimestamp() {
-        return failTimestamp;
+        return new Date(failTimestamp.getTime());
     }
 
     public void setFailTimestamp(Date failTimestamp) {
-        this.failTimestamp = failTimestamp;
+        this.failTimestamp = new Date(failTimestamp.getTime());
     }
 }

@@ -4,19 +4,18 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <artifactId>batch-service</artifactId>
+    <version>0.0.2</version>
+    <packaging>jar</packaging>
+
     <parent>
         <groupId>com.bwts</groupId>
         <artifactId>bwts-parent</artifactId>
-        <version>0.1.2</version>
+        <version>0.1.3</version>
     </parent>
-
-    <artifactId>batch-service</artifactId>
-    <version>0.0.1</version>
-    <packaging>jar</packaging>
 
     <properties>
         <target.dir>target</target.dir>
-        <common.version>338.0.0</common.version>
         <bwts.common.version>0.7.3</bwts.common.version>
     </properties>
 
@@ -180,6 +179,11 @@
             <groupId>com.bwts</groupId>
             <artifactId>bwts-common-batch</artifactId>
             <version>${bwts.common.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.json-lib</groupId>
+            <artifactId>json-lib</artifactId>
+            <version>2.4</version>
         </dependency>
 
         <!--Test-->

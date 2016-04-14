@@ -4,13 +4,15 @@ import com.bwts.batchservice.dao.impl.MybatisFailDocLogDAO;
 import com.bwts.batchservice.dao.impl.MybatisTaskDocLogDAO;
 import com.bwts.batchservice.dto.DocLogDTO;
 import com.bwts.batchservice.dto.DocumentStatusDTO;
+import com.bwts.batchservice.dto.DocumentStatusList;
 import com.bwts.batchservice.dto.DocumentStatusListDTO;
+import com.bwts.batchservice.entity.DocumentStatus;
 import com.bwts.batchservice.entity.FailDocLog;
 import com.bwts.batchservice.entity.TaskDocLog;
-import com.bwts.common.kafka.message.InvoiceMessage;
-import com.bwts.common.kafka.producer.KafkaMessageProducer;
 import com.bwts.common.security.DefaultTenants;
 import com.bwts.common.security.UserContext;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,8 +38,6 @@ public class DocBatchService {
     private static final String HEADER_USER_ID = "X-BWTS-UserId";
     private static final String HEADER_TENANT_ID = "X-BWTS-TenantId";
 
-    @Autowired
-    private KafkaMessageProducer kafkaMessageProducer;
     private final MybatisTaskDocLogDAO taskDocLogDAO;
     private final MybatisFailDocLogDAO failDocLogDAO;
 
@@ -45,51 +45,50 @@ public class DocBatchService {
     private boolean batchDisabled;
 
     @Value("${tenant.document.failurl}")
-    private String failedUrlTmpl;
+    private String failedJobUrl;
 
-    private final int maxRetryCount;
-    private final String producerTopic;
+    @Value("${tenant.document.failstatusurl}")
+    private String failedStatusUrl;
 
+    @Value("${tenant.document.updateurlstatus}")
+    private String updateStatusUrl;
+
+    @Value("${batch.max.retry}")
+    private int maxRetryCount;
+
+    @Value("${init.page.num}")
+    private int initPageNum;
+
+    @Value("${page.size}")
+    private int pageSize;
 
     @Autowired
     public DocBatchService(MybatisTaskDocLogDAO taskDocLogDAO,
-            MybatisFailDocLogDAO failDocLogDAO,
-            @Value("${batch.max.retry}") int maxRetryCount,
-            @Value("${kafka.producer.topic.invoice}") String producerTopic) {
+            MybatisFailDocLogDAO failDocLogDAO) {
         this.taskDocLogDAO = taskDocLogDAO;
         this.failDocLogDAO = failDocLogDAO;
-        this.maxRetryCount = maxRetryCount;
-        this.producerTopic = producerTopic;
     }
 
-    public void processDocWithRetry(DocLogDTO docLogDTO) {
+    private boolean processDoc(DocLogDTO docLogDTO) {
+        boolean res = true;
         if (batchDisabled) {
             LOGGER.info("batch job has be disabled by property settings.");
-            return;
+            return  res;
         }
 
         try {
             if (docLogDTO.getRetryTimes() >= maxRetryCount) {
                 saveFailDoc(docLogDTO);
-                return;
+                res = false;
             } else {
                 saveTaskDoc(docLogDTO);
+                res = true;
             }
         } catch (Exception e) {
-            LOGGER.info("save doc failure with some exceptions, put task into kafka again");
+            LOGGER.info("save doc failure with some exceptions");
         }
 
-        retry(docLogDTO);
-    }
-
-    private void retry(DocLogDTO docLogDTO) {
-        InvoiceMessage.InvoiceMessgeBuilder messageBuilder = new InvoiceMessage.InvoiceMessgeBuilder();
-
-        InvoiceMessage message = messageBuilder
-                .withDocumentId(docLogDTO.getDocumentId())
-                .withInvoiceData(docLogDTO.getPayload())
-                .build();
-        kafkaMessageProducer.send(producerTopic, message);
+        return res;
     }
 
     @Transactional
@@ -111,7 +110,7 @@ public class DocBatchService {
     }
 
     @Transactional
-    public void saveFailDoc(DocLogDTO docLogDTO) {
+    private void saveFailDoc(DocLogDTO docLogDTO) {
         LOGGER.info("tenant: {}  document: {}   has tried more than {} times. stopping trying", docLogDTO.getTenantId(),
                 docLogDTO.getDocumentId(), maxRetryCount);
         FailDocLog failDocLog = new FailDocLog();
@@ -128,58 +127,152 @@ public class DocBatchService {
     }
 
     @Transactional
-    public int getRetriedTimes(DocLogDTO docLogDTO) {
+    private int getRetriedTimes(DocLogDTO docLogDTO) {
         return taskDocLogDAO.get(docLogDTO.getTenantId(), docLogDTO.getDocumentId(), docLogDTO.getPhase()).size();
     }
 
 
-    @Scheduled(fixedRateString = "${sender.scheduler.pull.interval}", initialDelay = 15 * 600)
+    @Scheduled(fixedRateString = "${scheduler.pull.interval}", initialDelay = 15 * 600)
     public void pullBatchService() {
-        LOGGER.info("begin pull batch job {}", new Date());
-        int pageNum = 1;
-        int pageSize = 20;
-        boolean isContinue = true;
+        pullBatchService("SENDER");
+        pullBatchService("RECEIVER");
+    }
+
+    private void pullBatchService (String owner) {
+        int pageNum = initPageNum;
+        while(true) {
+            DocumentStatusListDTO documentStatusListDTO = getFailedJobList(owner, pageNum++, pageSize);
+            DocumentStatusList senderStatus = getSenderStatus(owner, documentStatusListDTO);
+
+            if(documentStatusListDTO == null || documentStatusListDTO.getTotalCount() <= 0 || documentStatusListDTO.getItems() == null) {
+                return;
+            }
+            for(DocumentStatusDTO status : senderStatus.getItems()) {
+                switch (owner) {
+                    case "SENDER" : {
+                        boolean res = prepareProcessDoc(status);
+                        if (!res) {
+                            updateDocumentStatus(status, "SENDER");
+                        }
+                        break;
+                    }
+
+                    case "RECEIVER" : {
+                        if(status.getFlowStatus() == DocumentStatus.SUCCESS) {
+                            boolean res = prepareProcessDoc(status);
+                            if(!res) {
+                                updateDocumentStatus(status, "RECEIVER");
+                            }
+                        }
+                        break;
+                    }
+                    default : break;
+                }
+            }
+        }
+    }
+
+    public boolean prepareProcessDoc(DocumentStatusDTO documentStatusDTO) {
+        DocLogDTO docLogDTO = new DocLogDTO.Builder()
+                .setTenantId(documentStatusDTO.getTenantId())
+                .setDocumentId(documentStatusDTO.getDocumentId())
+                .setPayload(documentStatusDTO.getUblData())
+                .setThrowTime(new Date())
+                .setActionResult(documentStatusDTO.getFlowStatus().toString())
+                .build();
+
+        docLogDTO.setPhase("Unknown");
+        docLogDTO.setRetryTimes(getRetriedTimes(docLogDTO));
+
+        SecurityContextHolder.setContext(new UserContext(null, docLogDTO.getTenantId()));
+
+        boolean res = processDoc(docLogDTO);
+
+        return res;
+    }
+
+    private DocumentStatusListDTO getFailedJobList(String owner, int pageNum, int pageSize) {
+        LOGGER.info("{}: begin get failed jobs, {}", owner.toLowerCase(), new Date());
+
         HttpHeaders headers = new HttpHeaders();
         headers.add(HEADER_USER_ID, DefaultTenants.ANONYMOUS_USER.toString());
         headers.add(HEADER_TENANT_ID, DefaultTenants.ANONYMOUS_TENANT.toString());
         HttpEntity entity = new HttpEntity(headers);
-        while (isContinue) {
-            String failedDocAddr = StringUtils.replace(failedUrlTmpl, "{pageNum}", String.valueOf(pageNum++));
-            failedDocAddr = StringUtils.replace(failedDocAddr, "{pageSize}", String.valueOf(pageSize));
-            RestTemplate restTemplate = new RestTemplate();
-            ResponseEntity<DocumentStatusListDTO> responseEntity =
-                    restTemplate.exchange(failedDocAddr, HttpMethod.GET, entity, DocumentStatusListDTO.class);
 
-            DocumentStatusListDTO failedJobList = responseEntity.getBody();
+        String failedDocAddr = StringUtils.replace(failedJobUrl, "{pageNum}", String.valueOf(pageNum));
+        failedDocAddr = StringUtils.replace(failedDocAddr, "{pageSize}", String.valueOf(pageSize));
+        failedDocAddr = StringUtils.replace(failedDocAddr, "{from}", owner);
 
-            LOGGER.info("have fetched failed job!");
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<DocumentStatusListDTO> responseEntity =
+                restTemplate.exchange(failedDocAddr, HttpMethod.GET, entity, DocumentStatusListDTO.class);
 
-            if (failedJobList != null && failedJobList.getTotalCount() > 0
-                    && failedJobList.getItems() != null) {
-                for (DocumentStatusDTO document : failedJobList.getItems()) {
-                    if (document.getUblData() == null) {
-                        LOGGER.info("ubldata is empty, can not send to kafka!");
-                        continue;
-                    }
-                    DocLogDTO docLogDTO = new DocLogDTO.Builder()
-                            .setTenantId(document.getTenantId())
-                            .setDocumentId(document.getDocumentId())
-                            .setPayload(document.getUblData())
-                            .setThrowTime(new Date())
-                            .build();
+        DocumentStatusListDTO failedJobList = responseEntity.getBody();
 
-                    docLogDTO.setPhase("Unknown");
-                    docLogDTO.setRetryTimes(getRetriedTimes(docLogDTO));
+        LOGGER.info("{}: fetched failed jobs {}", owner.toLowerCase(), new Date());
 
-                    SecurityContextHolder.setContext(new UserContext(null, docLogDTO.getTenantId()));
+        return failedJobList;
+    }
 
-                    processDocWithRetry(docLogDTO);
-                }
-            } else {
-                isContinue = false;
-            }
+    private DocumentStatusList getSenderStatus(String owner, DocumentStatusListDTO documentStatusListDTO) {
+        if(documentStatusListDTO == null) {
+            LOGGER.info("documentStatusListDTO is illegal");
+            return null;
         }
-        LOGGER.info("end pull batch job {}", new Date());
+
+        LOGGER.info("{}: begin get sender status {}", owner, new Date());
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("documentOwner", owner);
+
+        JSONArray documentIds = new JSONArray();
+        JSONArray tenantIds = new JSONArray();
+        for(DocumentStatusDTO document : documentStatusListDTO.getItems()) {
+            documentIds.add(document.getDocumentId().toString());
+            tenantIds.add(document.getTenantId().toString());
+        }
+
+        jsonObject.put("documentIds", documentIds);
+        jsonObject.put("tenantIds", tenantIds);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HEADER_USER_ID, DefaultTenants.ANONYMOUS_USER.toString());
+        headers.add(HEADER_TENANT_ID, DefaultTenants.ANONYMOUS_TENANT.toString());
+        HttpEntity entity = new HttpEntity(jsonObject, headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<DocumentStatusList> responseEntity =
+                restTemplate.exchange(failedStatusUrl, HttpMethod.PUT, entity, DocumentStatusList.class);
+
+        DocumentStatusList senderStatus = responseEntity.getBody();
+
+        LOGGER.info("{}: fetched sender status {}", owner, new Date());
+
+        return senderStatus;
+    }
+
+    private void updateDocumentStatus(DocumentStatusDTO documentStatusDTO, String owner) {
+        String updateStatusUrl = StringUtils.replace(this.updateStatusUrl, "{docId}", documentStatusDTO.getDocumentId().toString());
+
+        JSONObject jsonObject = new JSONObject();
+
+        if(owner.equals("SENDER")) {
+            jsonObject.put("flowStatus", DocumentStatus.RETRY_FAILED);
+        } else if(owner.equals("RECEIVER")) {
+            jsonObject.put("flowStatus", DocumentStatus.MIGRATION_RETRY_FAILED);
+        } else {
+            // do nothing
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HEADER_USER_ID, DefaultTenants.ANONYMOUS_USER.toString());
+        headers.add(HEADER_TENANT_ID, DefaultTenants.ANONYMOUS_TENANT.toString());
+        HttpEntity entity = new HttpEntity(jsonObject, headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.put(updateStatusUrl, entity);
+
+        LOGGER.info("document with documentid:{}, tenantid:{} has tried max times, update status finished",
+                documentStatusDTO.getDocumentId(), documentStatusDTO.getTenantId());
     }
 
 }

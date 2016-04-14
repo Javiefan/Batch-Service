@@ -77,10 +77,10 @@ public class TaskDocLog {
     }
 
     public Date getActionTimestamp() {
-        return actionTimestamp;
+        return new Date(actionTimestamp.getTime());
     }
 
     public void setActionTimestamp(Date actionTimestamp) {
-        this.actionTimestamp = actionTimestamp;
+        this.actionTimestamp = new Date(actionTimestamp.getTime());
     }
 }

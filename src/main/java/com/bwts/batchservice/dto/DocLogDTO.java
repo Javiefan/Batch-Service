@@ -47,7 +47,7 @@ public class DocLogDTO {
     }
 
     public Date getThrowTime() {
-        return throwTime;
+        return new Date(throwTime.getTime());
     }
 
     public int getRetryTimes() {
@@ -83,7 +83,7 @@ public class DocLogDTO {
     }
 
     public void setThrowTime(Date throwTime) {
-        this.throwTime = throwTime;
+        this.throwTime = new Date(throwTime.getTime());
     }
 
     public void setRetryTimes(int retryTimes) {
@@ -93,7 +93,6 @@ public class DocLogDTO {
     public void setMessage(String message) {
         this.message = message;
     }
-
 
     public static class Builder {
         private DocLogDTO docLogDTO = new DocLogDTO();

@@ -9,11 +9,12 @@ public class DocumentStatusListDTO {
     private int pageNum;
     private int totalPages;
 
+    private List<DocumentStatusDTO> items;
+
+
     public int getTotalPages() {
         return totalPages;
     }
-
-    private List<DocumentStatusDTO> items;
 
     public int getTotalCount() {
         return totalCount;
@@ -28,7 +29,28 @@ public class DocumentStatusListDTO {
     }
 
 
+    public void setTotalCount(int totalCount) {
+        this.totalCount = totalCount;
+    }
+
+    public void setPageSize(int pageSize) {
+        this.pageSize = pageSize;
+    }
+
+    public void setPageNum(int pageNum) {
+        this.pageNum = pageNum;
+    }
+
+    public void setTotalPages(int totalPages) {
+        this.totalPages = totalPages;
+    }
+
+    public void setItems(List<DocumentStatusDTO> items) {
+        this.items = items;
+    }
+
     public List<DocumentStatusDTO> getItems() {
         return items;
     }
+
 }
