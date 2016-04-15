@@ -224,15 +224,14 @@ public class DocBatchService {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("documentOwner", owner);
 
-        JSONArray documentIds = new JSONArray();
-        JSONArray tenantIds = new JSONArray();
-        for(DocumentStatusDTO document : documentStatusListDTO.getItems()) {
-            documentIds.add(document.getDocumentId().toString());
-            tenantIds.add(document.getTenantId().toString());
+        JSONArray items = new JSONArray();
+        for(DocumentStatusDTO documentStatusDTO : documentStatusListDTO.getItems()) {
+            JSONObject status = new JSONObject();
+            status.put("documentId", documentStatusDTO.getDocumentId().toString());
+            status.put("tenantId", documentStatusDTO.getTenantId().toString());
+            items.add(status);
         }
-
-        jsonObject.put("documentIds", documentIds);
-        jsonObject.put("tenantIds", tenantIds);
+        jsonObject.put("items", items);
 
         HttpHeaders headers = new HttpHeaders();
         headers.add(HEADER_USER_ID, DefaultTenants.ANONYMOUS_USER.toString());
