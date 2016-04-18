@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
+import javax.xml.ws.http.HTTPException;
 import java.util.Date;
 
 @Service
@@ -141,8 +142,28 @@ public class DocBatchService {
     private void pullBatchService (String owner) {
         int pageNum = initPageNum;
         while(true) {
-            DocumentStatusListDTO documentStatusListDTO = getFailedJobList(owner, pageNum++, pageSize);
-            DocumentStatusList senderStatus = getSenderStatus(owner, documentStatusListDTO);
+            DocumentStatusListDTO documentStatusListDTO = null;
+            DocumentStatusList senderStatus = null;
+            try {
+                documentStatusListDTO = getFailedJobList(owner, pageNum++, pageSize);
+            } catch (HTTPException e1) {
+                LOGGER.info("get failed job: api calling exception, complete url is {}", failedJobUrl);
+                LOGGER.info("{}", e1.getStackTrace());
+            } catch (Exception e2) {
+                LOGGER.info("exception other than HTTPException");
+                LOGGER.info("{}", e2.getStackTrace());
+            }
+
+            try {
+                senderStatus = getSenderStatus(owner, documentStatusListDTO);
+
+            } catch (HTTPException e1) {
+                LOGGER.info("get sender status: api calling exception, complete url is {}", failedStatusUrl);
+                LOGGER.info("{}", e1.getStackTrace());
+            } catch (Exception e2) {
+                LOGGER.info("exception other than HTTPException");
+                LOGGER.info("{}", e2.getStackTrace());
+            }
 
             if(documentStatusListDTO == null || documentStatusListDTO.getTotalCount() <= 0 || documentStatusListDTO.getItems() == null) {
                 return;
@@ -152,7 +173,16 @@ public class DocBatchService {
                     case "SENDER" : {
                         boolean res = prepareProcessDoc(status);
                         if (!res) {
-                            updateDocumentStatus(status, "SENDER");
+                            try {
+                                updateDocumentStatus(status, "SENDER");
+                            } catch (HTTPException e1) {
+                                LOGGER.info("update job status: api calling exception, complete url is {}", updateStatusUrl);
+                                LOGGER.info("{}", e1.getStackTrace());
+                            } catch (Exception e2) {
+                                LOGGER.info("exception other than HTTPException");
+                                LOGGER.info("{}", e2.getStackTrace());
+                            }
+
                         }
                         break;
                     }
@@ -161,7 +191,15 @@ public class DocBatchService {
                         if(status.getFlowStatus() == DocumentStatus.SUCCESS) {
                             boolean res = prepareProcessDoc(status);
                             if(!res) {
-                                updateDocumentStatus(status, "RECEIVER");
+                                try {
+                                    updateDocumentStatus(status, "RECEIVER");
+                                } catch (HTTPException e1) {
+                                    LOGGER.info("update job status: api calling exception, complete url is {}", updateStatusUrl);
+                                    LOGGER.info("{}", e1.getStackTrace());
+                                } catch (Exception e2) {
+                                    LOGGER.info("exception other than HTTPException");
+                                    LOGGER.info("{}", e2.getStackTrace());
+                                }
                             }
                         }
                         break;
