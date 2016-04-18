@@ -96,10 +96,10 @@ public class DocBatchService {
     private void saveTaskDoc(DocLogDTO docLogDTO) {
 
         LOGGER.info("tenant: {}  document: {}   has tried {}th times, max times {}", docLogDTO.getTenantId(),
-                docLogDTO.getDocumentId(), docLogDTO.getRetryTimes(), maxRetryCount);
+                docLogDTO.getResourceId(), docLogDTO.getRetryTimes(), maxRetryCount);
         TaskDocLog taskDocLog = new TaskDocLog();
         taskDocLog.setTenantId(docLogDTO.getTenantId());
-        taskDocLog.setDocumentId(docLogDTO.getDocumentId());
+        taskDocLog.setResourceId(docLogDTO.getResourceId());
         taskDocLog.setPhase(docLogDTO.getPhase());
         taskDocLog.setRetryTime(docLogDTO.getRetryTimes());
 
@@ -113,11 +113,11 @@ public class DocBatchService {
     @Transactional
     private void saveFailDoc(DocLogDTO docLogDTO) {
         LOGGER.info("tenant: {}  document: {}   has tried more than {} times. stopping trying", docLogDTO.getTenantId(),
-                docLogDTO.getDocumentId(), maxRetryCount);
+                docLogDTO.getResourceId(), maxRetryCount);
         FailDocLog failDocLog = new FailDocLog();
 
         failDocLog.setTenantId(docLogDTO.getTenantId());
-        failDocLog.setDocumentId(docLogDTO.getDocumentId());
+        failDocLog.setResourceId(docLogDTO.getResourceId());
         failDocLog.setPhase(docLogDTO.getPhase());
 
         failDocLog.setTaskId(docLogDTO.getTaskId());
@@ -129,7 +129,7 @@ public class DocBatchService {
 
     @Transactional
     private int getRetriedTimes(DocLogDTO docLogDTO) {
-        return taskDocLogDAO.get(docLogDTO.getTenantId(), docLogDTO.getDocumentId(), docLogDTO.getPhase()).size();
+        return taskDocLogDAO.get(docLogDTO.getTenantId(), docLogDTO.getResourceId(), docLogDTO.getPhase(), docLogDTO.getResourceType()).size();
     }
 
 
@@ -177,7 +177,7 @@ public class DocBatchService {
     public boolean prepareProcessDoc(DocumentStatusDTO documentStatusDTO) {
         DocLogDTO docLogDTO = new DocLogDTO.Builder()
                 .setTenantId(documentStatusDTO.getTenantId())
-                .setDocumentId(documentStatusDTO.getDocumentId())
+                .setResourceId(documentStatusDTO.getResourceId())
                 .setPayload(documentStatusDTO.getUblData())
                 .setThrowTime(new Date())
                 .setActionResult(documentStatusDTO.getFlowStatus().toString())
@@ -237,7 +237,7 @@ public class DocBatchService {
         JSONArray items = new JSONArray();
         for (DocumentStatusDTO documentStatusDTO : documentStatusListDTO.getItems()) {
             JSONObject status = new JSONObject();
-            status.put("documentId", documentStatusDTO.getDocumentId().toString());
+            status.put("resourceId", documentStatusDTO.getResourceId().toString());
             status.put("tenantId", documentStatusDTO.getTenantId().toString());
             items.add(status);
         }
@@ -268,7 +268,7 @@ public class DocBatchService {
     }
 
     private void updateDocumentStatus(DocumentStatusDTO documentStatusDTO, String owner) {
-        String updateStatusUrl = StringUtils.replace(this.updateStatusUrl, "{docId}", documentStatusDTO.getDocumentId().toString());
+        String updateStatusUrl = StringUtils.replace(this.updateStatusUrl, "{docId}", documentStatusDTO.getResourceId().toString());
 
         JSONObject jsonObject = new JSONObject();
 
@@ -297,7 +297,7 @@ public class DocBatchService {
         }
 
         LOGGER.info("document with documentid:{}, tenantid:{} has tried max times, update status finished",
-                documentStatusDTO.getDocumentId(), documentStatusDTO.getTenantId());
+                documentStatusDTO.getResourceId(), documentStatusDTO.getTenantId());
     }
 
 }

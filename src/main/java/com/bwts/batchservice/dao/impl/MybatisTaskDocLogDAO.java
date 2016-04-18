@@ -24,11 +24,12 @@ public class MybatisTaskDocLogDAO implements TaskDocLogDAO{
     }
 
     @Override
-    public List<TaskDocLog> get(UUID tenantId, UUID documentId, String phase) {
+    public List<TaskDocLog> get(UUID tenantId, UUID resourceId, String phase, String resourceType) {
         Map<String,Object> map = new HashMap<>();
         map.put("tenantId",tenantId);
-        map.put("documentId",documentId);
+        map.put("resourceId",resourceId);
         map.put("phase",phase);
+        map.put("resourceType", resourceType);
         return taskDocLogMapper.selectDocLog(map);
     }
 }

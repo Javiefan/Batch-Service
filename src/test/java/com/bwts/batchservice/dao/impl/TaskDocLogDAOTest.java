@@ -22,8 +22,9 @@ public class TaskDocLogDAOTest {
     private TaskDocLogDAO taskDocLogDAO;
 
     private UUID tenantId = UUID.randomUUID();
-    private UUID documentId = UUID.randomUUID();
+    private UUID resourceId = UUID.randomUUID();
     private String phase = "PDF";
+    private String resourceType = "generate_pdf";
 
     @Test
     public void testInsert_should_pass(){
@@ -47,18 +48,19 @@ public class TaskDocLogDAOTest {
             this.taskDocLogDAO.insert(taskDocLog);
         }
 
-        List<TaskDocLog> list =  this.taskDocLogDAO.get(tenantId,documentId,phase);
+        List<TaskDocLog> list =  this.taskDocLogDAO.get(tenantId,resourceId,phase, resourceType);
         assertEquals("expect "+retryAttempt+" records, but get "+ list.size()+" records", retryAttempt,list.size());
     }
 
     private TaskDocLog getDummyDocLog(){
         TaskDocLog taskDocLog = new TaskDocLog();
         taskDocLog.setTenantId(tenantId);
-        taskDocLog.setDocumentId(documentId);
+        taskDocLog.setResourceId(resourceId);
         taskDocLog.setActionResult("FAIL");
         taskDocLog.setPhase(phase);
         taskDocLog.setMessage("123");
         taskDocLog.setActionTimestamp(new Date());
+        taskDocLog.setResourceType(resourceType);
         return taskDocLog;
     }
 }

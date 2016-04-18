@@ -1,12 +1,16 @@
 package com.bwts.batchservice.dto;
 
+import scala.util.parsing.combinator.testing.Str;
+
 import java.util.Date;
 import java.util.UUID;
 
 public class DocLogDTO {
     private UUID tenantId;
 
-    private UUID documentId;
+    private UUID resourceId;
+
+    private String resourceType;
 
     private String phase;
 
@@ -26,8 +30,8 @@ public class DocLogDTO {
         return tenantId;
     }
 
-    public UUID getDocumentId() {
-        return documentId;
+    public UUID getResourceId() {
+        return resourceId;
     }
 
     public String getPhase() {
@@ -62,8 +66,8 @@ public class DocLogDTO {
         this.tenantId = tenantId;
     }
 
-    public void setDocumentId(UUID documentId) {
-        this.documentId = documentId;
+    public void setResourceId(UUID resourceId) {
+        this.resourceId = resourceId;
     }
 
     public void setPhase(String phase) {
@@ -94,6 +98,14 @@ public class DocLogDTO {
         this.message = message;
     }
 
+    public String getResourceType() {
+        return resourceType;
+    }
+
+    public void setResourceType(String resourceType) {
+        this.resourceType = resourceType;
+    }
+
     public static class Builder {
         private DocLogDTO docLogDTO = new DocLogDTO();
 
@@ -102,8 +114,8 @@ public class DocLogDTO {
             return this;
         }
 
-        public Builder setDocumentId(UUID documentId) {
-            docLogDTO.setDocumentId(documentId);
+        public Builder setResourceId(UUID resourceId) {
+            docLogDTO.setResourceId(resourceId);
             return this;
         }
 
@@ -140,6 +152,11 @@ public class DocLogDTO {
         public Builder setTaskId(Integer taskId) {
             docLogDTO.setTaskId(taskId);
             return this;
+        }
+
+        public Builder setResourceType(String resourceType) {
+            docLogDTO.setResourceType(resourceType);
+            return  this;
         }
 
         public DocLogDTO build() {

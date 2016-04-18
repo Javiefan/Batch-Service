@@ -8,7 +8,9 @@ public class TaskDocLog {
 
     private UUID tenantId;
 
-    private UUID documentId;
+    private UUID resourceId;
+
+    private String resourceType;
 
     private String phase;
 
@@ -36,12 +38,12 @@ public class TaskDocLog {
         this.tenantId = tenantId;
     }
 
-    public UUID getDocumentId() {
-        return documentId;
+    public UUID getResourceId() {
+        return resourceId;
     }
 
-    public void setDocumentId(UUID documentId) {
-        this.documentId = documentId;
+    public void setResourceId(UUID resourceId) {
+        this.resourceId = resourceId;
     }
 
     public String getPhase() {
@@ -82,5 +84,13 @@ public class TaskDocLog {
 
     public void setActionTimestamp(Date actionTimestamp) {
         this.actionTimestamp = new Date(actionTimestamp.getTime());
+    }
+
+    public String getResourceType() {
+        return resourceType;
+    }
+
+    public void setResourceType(String resourceType) {
+        this.resourceType = resourceType;
     }
 }

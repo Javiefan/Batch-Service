@@ -8,7 +8,9 @@ public class FailDocLog {
 
     private UUID tenantId;
 
-    private UUID documentId;
+    private UUID resourceId;
+
+    private String resoureType;
 
     private String phase;
 
@@ -34,12 +36,12 @@ public class FailDocLog {
         this.tenantId = tenantId;
     }
 
-    public UUID getDocumentId() {
-        return documentId;
+    public UUID getResourceId() {
+        return resourceId;
     }
 
-    public void setDocumentId(UUID documentId) {
-        this.documentId = documentId;
+    public void setResourceId(UUID resourceId) {
+        this.resourceId = resourceId;
     }
 
     public String getPhase() {
@@ -72,5 +74,13 @@ public class FailDocLog {
 
     public void setFailTimestamp(Date failTimestamp) {
         this.failTimestamp = new Date(failTimestamp.getTime());
+    }
+
+    public String getType() {
+        return resoureType;
+    }
+
+    public void setType(String resoureType) {
+        this.resoureType = resoureType;
     }
 }

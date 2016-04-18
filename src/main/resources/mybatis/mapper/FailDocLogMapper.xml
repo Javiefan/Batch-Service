@@ -4,14 +4,15 @@
   <resultMap id="BaseResultMap" type="com.bwts.batchservice.entity.FailDocLog" >
     <id column="id" property="id" jdbcType="BIGINT" />
     <result column="tenant_id" property="tenantId" typeHandler="UUIDTypeHandler" />
-    <result column="document_id" property="documentId" typeHandler="UUIDTypeHandler" />
+    <result column="resource_id" property="resourceId" typeHandler="UUIDTypeHandler" />
+    <result column="resource_type" property="resourceType" jdbcType="VARCHAR" />
     <result column="phase" property="phase" jdbcType="VARCHAR" />
     <result column="task_id" property="taskId" jdbcType="BIGINT" />
     <result column="message" property="message" jdbcType="VARCHAR" />
     <result column="fail_timestamp" property="failTimestamp" jdbcType="TIMESTAMP" />
   </resultMap>
   <sql id="Base_Column_List" >
-    id, tenant_id, document_id, phase, task_id, message, fail_timestamp
+    id, tenant_id, resource_id, resource_type, phase, task_id, message, fail_timestamp
   </sql>
   <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
     select 
@@ -25,10 +26,10 @@
   </delete>
   <insert id="insert" parameterType="com.bwts.batchservice.entity.FailDocLog">
     insert into fail_doc_log (tenant_id,
-      document_id, phase, task_id, 
+      resource_id, resource_type, phase, task_id,
       message, fail_timestamp)
     values (#{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
-      #{documentId,jdbcType=OTHER,typeHandler=UUIDTypeHandler}, #{phase,jdbcType=VARCHAR}, #{taskId,jdbcType=BIGINT},
+      #{resourceId,jdbcType=OTHER,typeHandler=UUIDTypeHandler}, #{resourceType, jdbcType=VARCHAR}, #{phase,jdbcType=VARCHAR}, #{taskId,jdbcType=BIGINT},
       #{message,jdbcType=VARCHAR}, #{failTimestamp,jdbcType=TIMESTAMP})
   </insert>
   <insert id="insertSelective" parameterType="com.bwts.batchservice.entity.FailDocLog" >
@@ -40,8 +41,11 @@
       <if test="tenantId != null" >
         tenant_id,
       </if>
-      <if test="documentId != null" >
-        document_id,
+      <if test="resourceId != null" >
+        resource_id,
+      </if>
+      <if test="resourceType != null">
+        resource_type,
       </if>
       <if test="phase != null" >
         phase,
@@ -63,8 +67,11 @@
       <if test="tenantId != null" >
         #{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
       </if>
-      <if test="documentId != null" >
-        #{documentId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
+      <if test="resourceId != null" >
+        #{resourceId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
+      </if>
+      <if test="resourceType != null" >
+        #{resourceType,jdbcType=VARCHAR},
       </if>
       <if test="phase != null" >
         #{phase,jdbcType=VARCHAR},
@@ -86,8 +93,11 @@
       <if test="tenantId != null" >
         tenant_id = #{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
       </if>
-      <if test="documentId != null" >
-        document_id = #{documentId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
+      <if test="resourceId != null" >
+        resource_id = #{resourceId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
+      </if>
+      <if test="resourceType != null" >
+        resource_type = #{resourceType,jdbcType=VARCHAR},
       </if>
       <if test="phase != null" >
         phase = #{phase,jdbcType=VARCHAR},
@@ -107,7 +117,8 @@
   <update id="updateByPrimaryKey" parameterType="com.bwts.batchservice.entity.FailDocLog" >
     update fail_doc_log
     set tenant_id = #{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
-      document_id = #{documentId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
+      resource_id = #{resourceId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
+      resource_type = #{resourceType,jdbcType=VARCHAR},
       phase = #{phase,jdbcType=VARCHAR},
       task_id = #{taskId,jdbcType=BIGINT},
       message = #{message,jdbcType=VARCHAR},
