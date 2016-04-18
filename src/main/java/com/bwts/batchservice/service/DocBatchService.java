@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
+import javax.xml.ws.http.HTTPException;
 import java.util.Date;
 
 @Service
@@ -64,7 +65,7 @@ public class DocBatchService {
 
     @Autowired
     public DocBatchService(MybatisTaskDocLogDAO taskDocLogDAO,
-            MybatisFailDocLogDAO failDocLogDAO) {
+                           MybatisFailDocLogDAO failDocLogDAO) {
         this.taskDocLogDAO = taskDocLogDAO;
         this.failDocLogDAO = failDocLogDAO;
     }
@@ -73,7 +74,7 @@ public class DocBatchService {
         boolean res = true;
         if (batchDisabled) {
             LOGGER.info("batch job has be disabled by property settings.");
-            return  res;
+            return res;
         }
 
         try {
@@ -138,18 +139,18 @@ public class DocBatchService {
         pullBatchService("RECEIVER");
     }
 
-    private void pullBatchService (String owner) {
+    private void pullBatchService(String owner) {
         int pageNum = initPageNum;
-        while(true) {
+        while (true) {
             DocumentStatusListDTO documentStatusListDTO = getFailedJobList(owner, pageNum++, pageSize);
             DocumentStatusList senderStatus = getSenderStatus(owner, documentStatusListDTO);
 
-            if(documentStatusListDTO == null || documentStatusListDTO.getTotalCount() <= 0 || documentStatusListDTO.getItems() == null) {
+            if (documentStatusListDTO == null || documentStatusListDTO.getTotalCount() <= 0 || documentStatusListDTO.getItems() == null) {
                 return;
             }
-            for(DocumentStatusDTO status : senderStatus.getItems()) {
+            for (DocumentStatusDTO status : senderStatus.getItems()) {
                 switch (owner) {
-                    case "SENDER" : {
+                    case "SENDER": {
                         boolean res = prepareProcessDoc(status);
                         if (!res) {
                             updateDocumentStatus(status, "SENDER");
@@ -157,16 +158,17 @@ public class DocBatchService {
                         break;
                     }
 
-                    case "RECEIVER" : {
-                        if(status.getFlowStatus() == DocumentStatus.SUCCESS) {
+                    case "RECEIVER": {
+                        if (status.getFlowStatus() == DocumentStatus.SUCCESS) {
                             boolean res = prepareProcessDoc(status);
-                            if(!res) {
+                            if (!res) {
                                 updateDocumentStatus(status, "RECEIVER");
                             }
                         }
                         break;
                     }
-                    default : break;
+                    default:
+                        break;
                 }
             }
         }
@@ -204,8 +206,16 @@ public class DocBatchService {
         failedDocAddr = StringUtils.replace(failedDocAddr, "{from}", owner);
 
         RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<DocumentStatusListDTO> responseEntity =
-                restTemplate.exchange(failedDocAddr, HttpMethod.GET, entity, DocumentStatusListDTO.class);
+        ResponseEntity<DocumentStatusListDTO> responseEntity = null;
+        try {
+            responseEntity = restTemplate.exchange(failedDocAddr, HttpMethod.GET, entity, DocumentStatusListDTO.class);
+        } catch (HTTPException e1) {
+            LOGGER.info("get failed job: api calling exception, complete url is {}", failedJobUrl);
+            LOGGER.info("{}", e1.getStackTrace());
+        } catch (Exception e2) {
+            LOGGER.info("exception other than HTTPException");
+            LOGGER.info("{}", e2.getStackTrace());
+        }
 
         DocumentStatusListDTO failedJobList = responseEntity.getBody();
 
@@ -215,7 +225,7 @@ public class DocBatchService {
     }
 
     private DocumentStatusList getSenderStatus(String owner, DocumentStatusListDTO documentStatusListDTO) {
-        if(documentStatusListDTO == null) {
+        if (documentStatusListDTO == null) {
             LOGGER.info("documentStatusListDTO is illegal");
             return null;
         }
@@ -225,7 +235,7 @@ public class DocBatchService {
         jsonObject.put("documentOwner", owner);
 
         JSONArray items = new JSONArray();
-        for(DocumentStatusDTO documentStatusDTO : documentStatusListDTO.getItems()) {
+        for (DocumentStatusDTO documentStatusDTO : documentStatusListDTO.getItems()) {
             JSONObject status = new JSONObject();
             status.put("documentId", documentStatusDTO.getDocumentId().toString());
             status.put("tenantId", documentStatusDTO.getTenantId().toString());
@@ -239,8 +249,16 @@ public class DocBatchService {
         HttpEntity entity = new HttpEntity(jsonObject, headers);
 
         RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<DocumentStatusList> responseEntity =
-                restTemplate.exchange(failedStatusUrl, HttpMethod.PUT, entity, DocumentStatusList.class);
+        ResponseEntity<DocumentStatusList> responseEntity = null;
+        try {
+            responseEntity = restTemplate.exchange(failedStatusUrl, HttpMethod.PUT, entity, DocumentStatusList.class);
+        } catch (HTTPException e1) {
+            LOGGER.info("get sender status: api calling exception, complete url is {}", failedStatusUrl);
+            LOGGER.info("{}", e1.getStackTrace());
+        } catch (Exception e2) {
+            LOGGER.info("exception other than HTTPException");
+            LOGGER.info("{}", e2.getStackTrace());
+        }
 
         DocumentStatusList senderStatus = responseEntity.getBody();
 
@@ -254,9 +272,9 @@ public class DocBatchService {
 
         JSONObject jsonObject = new JSONObject();
 
-        if(owner.equals("SENDER")) {
+        if (owner.equals("SENDER")) {
             jsonObject.put("flowStatus", DocumentStatus.RETRY_FAILED);
-        } else if(owner.equals("RECEIVER")) {
+        } else if (owner.equals("RECEIVER")) {
             jsonObject.put("flowStatus", DocumentStatus.MIGRATION_RETRY_FAILED);
         } else {
             // do nothing
@@ -268,7 +286,15 @@ public class DocBatchService {
         HttpEntity entity = new HttpEntity(jsonObject, headers);
 
         RestTemplate restTemplate = new RestTemplate();
-        restTemplate.put(updateStatusUrl, entity);
+        try {
+            restTemplate.put(updateStatusUrl, entity);
+        } catch (HTTPException e1) {
+            LOGGER.info("update job status: api calling exception, complete url is {}", updateStatusUrl);
+            LOGGER.info("{}", e1.getStackTrace());
+        } catch (Exception e2) {
+            LOGGER.info("exception other than HTTPException");
+            LOGGER.info("{}", e2.getStackTrace());
+        }
 
         LOGGER.info("document with documentid:{}, tenantid:{} has tried max times, update status finished",
                 documentStatusDTO.getDocumentId(), documentStatusDTO.getTenantId());
