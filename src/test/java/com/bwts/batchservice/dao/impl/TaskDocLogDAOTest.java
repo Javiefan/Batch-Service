@@ -22,7 +22,7 @@ public class TaskDocLogDAOTest {
     private TaskDocLogDAO taskDocLogDAO;
 
     private UUID tenantId = UUID.randomUUID();
-    private UUID resourceId = UUID.randomUUID();
+    private String resourceId = UUID.randomUUID().toString();
     private String phase = "PDF";
     private String resourceType = "generate_pdf";
 

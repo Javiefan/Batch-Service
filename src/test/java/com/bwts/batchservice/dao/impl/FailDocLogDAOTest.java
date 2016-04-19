@@ -20,7 +20,7 @@ public class FailDocLogDAOTest {
     @Autowired
     private FailDocLogDAO failDocLogDAO;
     private UUID tenantId = UUID.randomUUID();
-    private UUID resourceId = UUID.randomUUID();
+    private String resourceId = UUID.randomUUID().toString();
     private String phase = "PDF";
 
     @Test

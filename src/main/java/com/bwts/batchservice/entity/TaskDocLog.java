@@ -8,7 +8,7 @@ public class TaskDocLog {
 
     private UUID tenantId;
 
-    private UUID resourceId;
+    private String resourceId;
 
     private String resourceType;
 
@@ -38,11 +38,11 @@ public class TaskDocLog {
         this.tenantId = tenantId;
     }
 
-    public UUID getResourceId() {
+    public String getResourceId() {
         return resourceId;
     }
 
-    public void setResourceId(UUID resourceId) {
+    public void setResourceId(String resourceId) {
         this.resourceId = resourceId;
     }
 

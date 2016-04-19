@@ -4,7 +4,7 @@
     <resultMap id="BaseResultMap" type="com.bwts.batchservice.entity.TaskDocLog">
         <id column="id" property="id" jdbcType="BIGINT"/>
         <result column="tenant_id" property="tenantId" typeHandler="UUIDTypeHandler"/>
-        <result column="resource_id" property="resourceId" typeHandler="UUIDTypeHandler"/>
+        <result column="resource_id" property="resourceId" jdbcType="VARCHAR"/>
         <result column="resource_type" property="resourceType" jdbcType="VARCHAR"/>
         <result column="phase" property="phase" jdbcType="VARCHAR"/>
         <result column="retry_time" property="retryTime" jdbcType="INTEGER"/>
@@ -26,7 +26,7 @@
         <include refid="Base_Column_List"/>
         FROM task_doc_log
         WHERE tenant_id = #{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler}
-        AND resource_id = #{resourceId,jdbcType=OTHER,typeHandler=UUIDTypeHandler}
+        AND resource_id = #{resourceId,jdbcType=VARCHAR}
         AND resource_type = #{resourceType,jdbcType=VARCHAR}
         AND phase = #{phase,jdbcType=VARCHAR}
     </select>
@@ -39,7 +39,7 @@
         <selectKey order="AFTER" keyProperty="retryTime" resultType="int">
             SELECT max(retry_time) FROM task_doc_log WHERE
             tenant_id = #{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler}
-            AND resource_id = #{resourceId,jdbcType=OTHER,typeHandler=UUIDTypeHandler}
+            AND resource_id = #{resourceId,jdbcType=VARCHAR}
             AND resource_type = #{resourceType,jdbcType=VARCHAR}
             AND task_doc_log.phase = #{phase,jdbcType=VARCHAR}
         </selectKey>
@@ -47,7 +47,7 @@
         resource_id, resource_type, phase, retry_time,
         action_result, message, action_timestamp
         ) VALUES (#{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
-        #{resourceId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
+        #{resourceId,jdbcType=VARCHAR},
         #{resourceType,jdbcType=VARCHAR}, #{phase,jdbcType=VARCHAR},
         (SELECT CASE
         WHEN max(retry_time) IS NULL
@@ -56,7 +56,7 @@
         END
         FROM task_doc_log
         WHERE tenant_id = #{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler}
-        AND resource_id = #{resourceId,jdbcType=OTHER,typeHandler=UUIDTypeHandler}
+        AND resource_id = #{resourceId,jdbcType=VARCHAR}
         AND resource_type = #{resourceType,jdbcType=VARCHAR}
         AND task_doc_log.phase = #{phase,jdbcType=VARCHAR})
         , #{actionResult,jdbcType=VARCHAR}, #{message,jdbcType=VARCHAR}, #{actionTimestamp, jdbcType=TIMESTAMP})

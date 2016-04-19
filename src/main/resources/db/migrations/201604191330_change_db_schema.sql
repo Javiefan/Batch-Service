@@ -1,8 +1,10 @@
+DROP TABLE IF EXISTS fail_doc_log;
 DROP TABLE IF EXISTS task_doc_log;
+
 CREATE TABLE task_doc_log (
   id               BIGSERIAL PRIMARY KEY NOT NULL,
   tenant_id        UUID                  NOT NULL,
-  resource_id      UUID                  NOT NULL,
+  resource_id      CHARACTER VARYING     NOT NULL,
   resource_type    CHARACTER VARYING     NOT NULL,
   phase            CHARACTER VARYING(16) NOT NULL,
   retry_time       INTEGER,
@@ -14,12 +16,11 @@ CREATE INDEX task_doc_log_tenant_id_index ON task_doc_log (tenant_id);
 CREATE INDEX task_doc_log_document_id_index ON task_doc_log (resource_id);
 CREATE INDEX task_doc_log_action_timestamp_index ON task_doc_log (action_timestamp);
 
-DROP TABLE IF EXISTS fail_doc_log;
 CREATE TABLE fail_doc_log
 (
   id             BIGSERIAL PRIMARY KEY NOT NULL,
   tenant_id      UUID                  NOT NULL,
-  resource_id    UUID                  NOT NULL,
+  resource_id    CHARACTER VARYING     NOT NULL,
   resource_type  CHARACTER VARYING     NOT NULL,
   phase          VARCHAR(16)           NOT NULL,
   task_id        BIGINT,
@@ -30,3 +31,5 @@ CREATE TABLE fail_doc_log
 CREATE INDEX fail_doc_log_tenant_id_index ON fail_doc_log (tenant_id);
 CREATE INDEX fail_doc_log_document_id_index ON fail_doc_log (resource_id);
 CREATE INDEX fail_doc_log_task_id_index ON fail_doc_log (task_id);
+
+
