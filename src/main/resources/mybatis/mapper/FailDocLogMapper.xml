@@ -4,7 +4,7 @@
   <resultMap id="BaseResultMap" type="com.bwts.batchservice.entity.FailDocLog" >
     <id column="id" property="id" jdbcType="BIGINT" />
     <result column="tenant_id" property="tenantId" typeHandler="UUIDTypeHandler" />
-    <result column="resource_id" property="resourceId" typeHandler="UUIDTypeHandler" />
+    <result column="resource_id" property="resourceId" jdbcType="VARCHAR" />
     <result column="resource_type" property="resourceType" jdbcType="VARCHAR" />
     <result column="phase" property="phase" jdbcType="VARCHAR" />
     <result column="task_id" property="taskId" jdbcType="BIGINT" />
@@ -29,7 +29,7 @@
       resource_id, resource_type, phase, task_id,
       message, fail_timestamp)
     values (#{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
-      #{resourceId,jdbcType=OTHER,typeHandler=UUIDTypeHandler}, #{resourceType, jdbcType=VARCHAR}, #{phase,jdbcType=VARCHAR}, #{taskId,jdbcType=BIGINT},
+      #{resourceId,jdbcType=VARCHAR}, #{resourceType, jdbcType=VARCHAR}, #{phase,jdbcType=VARCHAR}, #{taskId,jdbcType=BIGINT},
       #{message,jdbcType=VARCHAR}, #{failTimestamp,jdbcType=TIMESTAMP})
   </insert>
   <insert id="insertSelective" parameterType="com.bwts.batchservice.entity.FailDocLog" >
@@ -68,7 +68,7 @@
         #{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
       </if>
       <if test="resourceId != null" >
-        #{resourceId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
+        #{resourceId,jdbcType=VARCHAR},
       </if>
       <if test="resourceType != null" >
         #{resourceType,jdbcType=VARCHAR},
@@ -94,7 +94,7 @@
         tenant_id = #{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
       </if>
       <if test="resourceId != null" >
-        resource_id = #{resourceId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
+        resource_id = #{resourceId,jdbcType=VARCHAR},
       </if>
       <if test="resourceType != null" >
         resource_type = #{resourceType,jdbcType=VARCHAR},
@@ -117,7 +117,7 @@
   <update id="updateByPrimaryKey" parameterType="com.bwts.batchservice.entity.FailDocLog" >
     update fail_doc_log
     set tenant_id = #{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
-      resource_id = #{resourceId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
+      resource_id = #{resourceId,jdbcType=VARCHAR},
       resource_type = #{resourceType,jdbcType=VARCHAR},
       phase = #{phase,jdbcType=VARCHAR},
       task_id = #{taskId,jdbcType=BIGINT},

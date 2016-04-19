@@ -1,12 +1,12 @@
 package com.bwts.batchservice.service;
 
+import com.bwts.batchservice.constants.StatusCode;
 import com.bwts.batchservice.dao.impl.MybatisFailDocLogDAO;
 import com.bwts.batchservice.dao.impl.MybatisTaskDocLogDAO;
 import com.bwts.batchservice.dto.DocLogDTO;
 import com.bwts.batchservice.dto.DocumentStatusDTO;
 import com.bwts.batchservice.dto.DocumentStatusList;
 import com.bwts.batchservice.dto.DocumentStatusListDTO;
-import com.bwts.batchservice.entity.DocumentStatus;
 import com.bwts.batchservice.entity.FailDocLog;
 import com.bwts.batchservice.entity.TaskDocLog;
 import com.bwts.common.security.DefaultTenants;
@@ -100,6 +100,7 @@ public class DocBatchService {
         TaskDocLog taskDocLog = new TaskDocLog();
         taskDocLog.setTenantId(docLogDTO.getTenantId());
         taskDocLog.setResourceId(docLogDTO.getResourceId());
+        taskDocLog.setResourceType(docLogDTO.getResourceType());
         taskDocLog.setPhase(docLogDTO.getPhase());
         taskDocLog.setRetryTime(docLogDTO.getRetryTimes());
 
@@ -118,6 +119,7 @@ public class DocBatchService {
 
         failDocLog.setTenantId(docLogDTO.getTenantId());
         failDocLog.setResourceId(docLogDTO.getResourceId());
+        failDocLog.setResourceType(docLogDTO.getResourceType());
         failDocLog.setPhase(docLogDTO.getPhase());
 
         failDocLog.setTaskId(docLogDTO.getTaskId());
@@ -161,7 +163,7 @@ public class DocBatchService {
                     }
 
                     case "RECEIVER": {
-                        if (status.getFlowStatus() == DocumentStatus.SUCCESS) {
+                        if (status.getStatus() == StatusCode.SUCCESS) {
                             boolean res = prepareProcessDoc(status);
                             if (!res) {
                                 updateDocumentStatus(status, "RECEIVER");
@@ -182,7 +184,8 @@ public class DocBatchService {
                 .setResourceId(documentStatusDTO.getResourceId())
                 .setPayload(documentStatusDTO.getUblData())
                 .setThrowTime(new Date())
-                .setActionResult(documentStatusDTO.getFlowStatus().toString())
+                .setActionResult(documentStatusDTO.getStatus().toString())
+                .setResourceType(documentStatusDTO.getResourceType())
                 .build();
 
         docLogDTO.setPhase("Unknown");
@@ -275,9 +278,9 @@ public class DocBatchService {
         JSONObject jsonObject = new JSONObject();
 
         if (owner.equals("SENDER")) {
-            jsonObject.put("flowStatus", DocumentStatus.RETRY_FAILED);
+            jsonObject.put("flowStatus", StatusCode.RETRY_FAILED);
         } else if (owner.equals("RECEIVER")) {
-            jsonObject.put("flowStatus", DocumentStatus.MIGRATION_RETRY_FAILED);
+            jsonObject.put("flowStatus", StatusCode.MIGRATION_RETRY_FAILED);
         } else {
             // do nothing
         }

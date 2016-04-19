@@ -8,7 +8,7 @@ import java.util.UUID;
 public class DocLogDTO {
     private UUID tenantId;
 
-    private UUID resourceId;
+    private String resourceId;
 
     private String resourceType;
 
@@ -30,7 +30,7 @@ public class DocLogDTO {
         return tenantId;
     }
 
-    public UUID getResourceId() {
+    public String getResourceId() {
         return resourceId;
     }
 
@@ -66,7 +66,7 @@ public class DocLogDTO {
         this.tenantId = tenantId;
     }
 
-    public void setResourceId(UUID resourceId) {
+    public void setResourceId(String resourceId) {
         this.resourceId = resourceId;
     }
 
@@ -114,7 +114,7 @@ public class DocLogDTO {
             return this;
         }
 
-        public Builder setResourceId(UUID resourceId) {
+        public Builder setResourceId(String resourceId) {
             docLogDTO.setResourceId(resourceId);
             return this;
         }

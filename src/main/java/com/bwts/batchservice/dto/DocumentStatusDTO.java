@@ -1,16 +1,14 @@
 package com.bwts.batchservice.dto;
 
 
-import com.bwts.batchservice.entity.DocumentStatus;
-
 import java.util.Date;
 import java.util.UUID;
 
 public class DocumentStatusDTO {
-    private UUID resourceId;
+    private String resourceId;
     private UUID tenantId;
     private String resourceType;
-    private DocumentStatus flowStatus;
+    private String status;
     private Date updateTime;
     private String ublData;
 
@@ -26,19 +24,19 @@ public class DocumentStatusDTO {
         }
     }
 
-    public DocumentStatus getFlowStatus() {
-        return flowStatus;
+    public String getStatus() {
+        return status;
     }
 
-    public void setFlowStatus(DocumentStatus flowStatus) {
-        this.flowStatus = flowStatus;
+    public void setStatus(String flowStatus) {
+        this.status = flowStatus;
     }
 
-    public UUID getResourceId() {
+    public String getResourceId() {
         return resourceId;
     }
 
-    public void setResourceId(UUID resourceId) {
+    public void setResourceId(String resourceId) {
         this.resourceId = resourceId;
     }
 
