@@ -34,31 +34,13 @@
         DELETE FROM task_doc_log
         WHERE id = #{id,jdbcType=BIGINT}
     </delete>
-    <insert id="insert" parameterType="com.bwts.batchservice.entity.TaskDocLog" useGeneratedKeys="true" keyProperty="id"
-            keyColumn="id">
-        <selectKey order="AFTER" keyProperty="retryTime" resultType="int">
-            SELECT max(retry_time) FROM task_doc_log WHERE
-            tenant_id = #{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler}
-            AND resource_id = #{resourceId,jdbcType=VARCHAR}
-            AND resource_type = #{resourceType,jdbcType=VARCHAR}
-            AND task_doc_log.phase = #{phase,jdbcType=VARCHAR}
-        </selectKey>
+    <insert id="insert" parameterType="com.bwts.batchservice.entity.TaskDocLog">
         INSERT INTO task_doc_log (tenant_id,
         resource_id, resource_type, phase, retry_time,
         action_result, message, action_timestamp
         ) VALUES (#{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
-        #{resourceId,jdbcType=VARCHAR},
-        #{resourceType,jdbcType=VARCHAR}, #{phase,jdbcType=VARCHAR},
-        (SELECT CASE
-        WHEN max(retry_time) IS NULL
-        THEN 1
-        ELSE max(retry_time) + 1
-        END
-        FROM task_doc_log
-        WHERE tenant_id = #{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler}
-        AND resource_id = #{resourceId,jdbcType=VARCHAR}
-        AND resource_type = #{resourceType,jdbcType=VARCHAR}
-        AND task_doc_log.phase = #{phase,jdbcType=VARCHAR})
-        , #{actionResult,jdbcType=VARCHAR}, #{message,jdbcType=VARCHAR}, #{actionTimestamp, jdbcType=TIMESTAMP})
+        #{resourceId,jdbcType=VARCHAR},#{resourceType,jdbcType=VARCHAR},
+        #{phase,jdbcType=VARCHAR},#{retryTime,jdbcType=INTEGER},
+        #{actionResult,jdbcType=VARCHAR}, #{message,jdbcType=VARCHAR}, #{actionTimestamp, jdbcType=TIMESTAMP})
     </insert>
 </mapper>

@@ -16,7 +16,7 @@
 
     <properties>
         <target.dir>target</target.dir>
-        <bwts.common.version>0.7.3</bwts.common.version>
+        <bwts.common.version>0.7.19</bwts.common.version>
     </properties>
 
     <build>
@@ -178,6 +178,11 @@
         <dependency>
             <groupId>com.bwts</groupId>
             <artifactId>bwts-common-batch</artifactId>
+            <version>${bwts.common.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.bwts</groupId>
+            <artifactId>bwts-common-rest</artifactId>
             <version>${bwts.common.version}</version>
         </dependency>
         <dependency>

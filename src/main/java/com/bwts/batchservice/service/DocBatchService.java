@@ -180,12 +180,12 @@ public class DocBatchService {
 
     public boolean prepareProcessDoc(DocumentStatusDTO documentStatusDTO) {
         DocLogDTO docLogDTO = new DocLogDTO.Builder()
-                .setTenantId(documentStatusDTO.getTenantId())
-                .setResourceId(documentStatusDTO.getResourceId())
-                .setPayload(documentStatusDTO.getUblData())
-                .setThrowTime(new Date())
-                .setActionResult(documentStatusDTO.getStatus().toString())
-                .setResourceType(documentStatusDTO.getResourceType())
+                .withTenantId(documentStatusDTO.getTenantId())
+                .withResourceId(documentStatusDTO.getResourceId())
+                .withPayload(documentStatusDTO.getUblData())
+                .withThrowTime(new Date())
+                .withActionResult(documentStatusDTO.getStatus().toString())
+                .withResourceType(documentStatusDTO.getResourceType())
                 .build();
 
         docLogDTO.setPhase("Unknown");
