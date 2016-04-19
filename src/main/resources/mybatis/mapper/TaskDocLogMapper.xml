@@ -25,10 +25,8 @@
         SELECT
         <include refid="Base_Column_List"/>
         FROM task_doc_log
-        WHERE tenant_id = #{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler}
-        AND resource_id = #{resourceId,jdbcType=VARCHAR}
+        WHERE resource_id = #{resourceId,jdbcType=VARCHAR}
         AND resource_type = #{resourceType,jdbcType=VARCHAR}
-        AND phase = #{phase,jdbcType=VARCHAR}
     </select>
     <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
         DELETE FROM task_doc_log

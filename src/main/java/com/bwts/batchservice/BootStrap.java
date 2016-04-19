@@ -16,7 +16,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @ComponentScan("com.bwts.batchservice")
 @EnableScheduling
-@Import({KafkaProducerConfig.class})
 public class BootStrap extends SpringBootServletInitializer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BootStrap.class);

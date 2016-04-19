@@ -18,17 +18,14 @@ public class MybatisTaskDocLogDAO implements TaskDocLogDAO{
     private TaskDocLogMapper taskDocLogMapper;
 
     @Override
-    public int insert(TaskDocLog taskDocLog) {
-        int result = taskDocLogMapper.insert(taskDocLog);
-        return taskDocLog.getRetryTime();
+    public void insert(TaskDocLog taskDocLog) {
+        taskDocLogMapper.insert(taskDocLog);
     }
 
     @Override
-    public List<TaskDocLog> get(UUID tenantId, String resourceId, String phase, String resourceType) {
+    public List<TaskDocLog> get(String resourceId, String resourceType) {
         Map<String,Object> map = new HashMap<>();
-        map.put("tenantId",tenantId);
         map.put("resourceId",resourceId);
-        map.put("phase",phase);
         map.put("resourceType", resourceType);
         return taskDocLogMapper.selectDocLog(map);
     }

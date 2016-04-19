@@ -28,7 +28,7 @@ public class DocumentBatchService {
     private static String OWNER_SENDER = "SENDER";
     private static String OWNER_RECEIVER = "RECEIVER";
 
-    @Value("${page.size}")
+    @Value("${batch.page.size}")
     private int pageSize;
 
     public void processFailedDocumentForSender() {
@@ -37,7 +37,7 @@ public class DocumentBatchService {
             DocumentStatusListDTO documentStatusListDTO = documentService.getFailedJobList(OWNER_SENDER, pageNum++, pageSize);
             DocumentStatusList senderStatus = documentService.retryDocument(OWNER_SENDER, documentStatusListDTO);
 
-            if (documentStatusListDTO == null || documentStatusListDTO.getTotalCount() <= 0 || documentStatusListDTO.getItems() == null) {
+            if (documentStatusListDTO == null || documentStatusListDTO.getTotalCount() <= 0 || documentStatusListDTO.getItems().size() == 0) {
                 return;
             }
             String type = documentStatusListDTO.getItems().get(0).getResourceType();
@@ -62,7 +62,7 @@ public class DocumentBatchService {
             DocumentStatusListDTO documentStatusListDTO = documentService.getFailedJobList(OWNER_RECEIVER, pageNum++, pageSize);
             DocumentStatusList senderStatus = documentService.retryDocument(OWNER_RECEIVER, documentStatusListDTO);
 
-            if (documentStatusListDTO == null || documentStatusListDTO.getTotalCount() <= 0 || documentStatusListDTO.getItems() == null) {
+            if (documentStatusListDTO == null || documentStatusListDTO.getTotalCount() <= 0 || documentStatusListDTO.getItems().size() == 0) {
                 return;
             }
             String type = documentStatusListDTO.getItems().get(0).getResourceType();

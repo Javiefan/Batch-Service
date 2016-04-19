@@ -33,8 +33,6 @@ public class RemoteDocumentService {
 
 
     public DocumentStatusListDTO getFailedJobList(String owner, int pageNum, int pageSize) {
-        LOGGER.info("{}: begin get failed jobs, {}", owner.toLowerCase(), new Date());
-
         return documentApiRestClient.getResource()
                 .path("documents/status/failed")
                 .queryParam("pageNum", String.valueOf(pageNum))
@@ -52,7 +50,7 @@ public class RemoteDocumentService {
             return null;
         }
 
-        LOGGER.info("{}: begin get sender status {}", owner, new Date());
+        LOGGER.info("Begin retry {} documents, the size is {}", owner, documentStatusListDTO.getItems().size());
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("documentOwner", owner);
 
