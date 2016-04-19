@@ -149,6 +149,8 @@ public class DocBatchService {
                 return;
             }
             for (DocumentStatusDTO status : senderStatus.getItems()) {
+                String type = documentStatusListDTO.getItems().get(0).getResourceType();
+                status.setResourceType(type);
                 switch (owner) {
                     case "SENDER": {
                         boolean res = prepareProcessDoc(status);
@@ -197,8 +199,8 @@ public class DocBatchService {
         LOGGER.info("{}: begin get failed jobs, {}", owner.toLowerCase(), new Date());
 
         HttpHeaders headers = new HttpHeaders();
-        headers.add(HEADER_USER_ID, DefaultTenants.ANONYMOUS_USER.toString());
-        headers.add(HEADER_TENANT_ID, DefaultTenants.ANONYMOUS_TENANT.toString());
+        headers.add(HEADER_USER_ID, DefaultTenants.SYSTEM_USER.toString());
+        headers.add(HEADER_TENANT_ID, DefaultTenants.SUPER_ADMIN_TENANT.toString());
         HttpEntity entity = new HttpEntity(headers);
 
         String failedDocAddr = StringUtils.replace(failedJobUrl, "{pageNum}", String.valueOf(pageNum));
@@ -244,8 +246,8 @@ public class DocBatchService {
         jsonObject.put("items", items);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.add(HEADER_USER_ID, DefaultTenants.ANONYMOUS_USER.toString());
-        headers.add(HEADER_TENANT_ID, DefaultTenants.ANONYMOUS_TENANT.toString());
+        headers.add(HEADER_USER_ID, DefaultTenants.SYSTEM_USER.toString());
+        headers.add(HEADER_TENANT_ID, DefaultTenants.SUPER_ADMIN_TENANT.toString());
         HttpEntity entity = new HttpEntity(jsonObject, headers);
 
         RestTemplate restTemplate = new RestTemplate();
@@ -281,8 +283,8 @@ public class DocBatchService {
         }
 
         HttpHeaders headers = new HttpHeaders();
-        headers.add(HEADER_USER_ID, DefaultTenants.ANONYMOUS_USER.toString());
-        headers.add(HEADER_TENANT_ID, DefaultTenants.ANONYMOUS_TENANT.toString());
+        headers.add(HEADER_USER_ID, DefaultTenants.SYSTEM_USER.toString());
+        headers.add(HEADER_TENANT_ID, DefaultTenants.SUPER_ADMIN_TENANT.toString());
         HttpEntity entity = new HttpEntity(jsonObject, headers);
 
         RestTemplate restTemplate = new RestTemplate();
