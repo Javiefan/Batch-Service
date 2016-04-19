@@ -20,7 +20,7 @@ public class FailDocLogDAOTest {
     @Autowired
     private FailDocLogDAO failDocLogDAO;
     private UUID tenantId = UUID.randomUUID();
-    private UUID documentId = UUID.randomUUID();
+    private UUID resourceId = UUID.randomUUID();
     private String phase = "PDF";
 
     @Test
@@ -39,7 +39,7 @@ public class FailDocLogDAOTest {
     private FailDocLog getDummyDocLog(){
         FailDocLog failDocLog = new FailDocLog();
         failDocLog.setTenantId(tenantId);
-        failDocLog.setDocumentId(documentId);
+        failDocLog.setResourceId(resourceId);
         failDocLog.setPhase(phase);
         failDocLog.setMessage("123");
 

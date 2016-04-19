@@ -7,8 +7,9 @@ import java.util.Date;
 import java.util.UUID;
 
 public class DocumentStatusDTO {
-    private UUID documentId;
+    private UUID resourceId;
     private UUID tenantId;
+    private String resourceType;
     private DocumentStatus flowStatus;
     private Date updateTime;
     private String ublData;
@@ -33,12 +34,12 @@ public class DocumentStatusDTO {
         this.flowStatus = flowStatus;
     }
 
-    public UUID getDocumentId() {
-        return documentId;
+    public UUID getResourceId() {
+        return resourceId;
     }
 
-    public void setDocumentId(UUID documentId) {
-        this.documentId = documentId;
+    public void setResourceId(UUID resourceId) {
+        this.resourceId = resourceId;
     }
 
     public UUID getTenantId() {
@@ -57,9 +58,17 @@ public class DocumentStatusDTO {
         this.ublData = ublData;
     }
 
+    public String getResourceType() {
+        return resourceType;
+    }
+
+    public void setResourceType(String resourceType) {
+        this.resourceType = resourceType;
+    }
+
     @Override
     public int hashCode() {
-        return documentId.hashCode();
+        return resourceId.hashCode();
     }
 
     @Override
@@ -69,9 +78,9 @@ public class DocumentStatusDTO {
         }
 
         DocumentStatusDTO documentStatusDTO = (DocumentStatusDTO) object;
-        if(documentStatusDTO.getDocumentId() == null) {
+        if(documentStatusDTO.getResourceId() == null) {
             return false;
         }
-        return documentStatusDTO.getDocumentId().equals(documentId);
+        return documentStatusDTO.getResourceId().equals(resourceId);
     }
 }
