@@ -1,6 +1,7 @@
 package com.bwts.batchservice.job;
 
 
+import com.bwts.batchservice.service.ComponentBatchService;
 import com.bwts.batchservice.service.DocumentBatchService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +18,8 @@ public class DocumentScheduleJobs {
 
     @Autowired
     private DocumentBatchService documentBatchService;
+    @Autowired
+    private ComponentBatchService componentBatchService;
 
     @Scheduled(fixedRateString = "${schedule.sender.regenerate.einvoice.interval}", initialDelay = 10 * 1000)
     public void processFailedDocumentForSender() {
@@ -40,6 +43,14 @@ public class DocumentScheduleJobs {
         documentBatchService.updateDocumentStatistics();
         long endTime = new Date().getTime();
         LOGGER.info("Batch JOB: updateDocumentStatistics take {} seconds to process", (endTime - beginTime) / 1000);
+    }
+
+    @Scheduled(fixedRateString = "${schedule.backup.component.interval}", initialDelay = 5 * 1000)
+    public void processFailedComponent() {
+        long beginTime = new Date().getTime();
+        componentBatchService.processFailedComponent();
+        long endTime = new Date().getTime();
+        LOGGER.info("Batch JOB: processFailedComponent take {} seconds to process", (endTime - beginTime) / 1000);
     }
 
 }
