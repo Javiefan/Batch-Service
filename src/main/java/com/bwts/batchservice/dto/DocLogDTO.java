@@ -1,7 +1,5 @@
 package com.bwts.batchservice.dto;
 
-import scala.util.parsing.combinator.testing.Str;
-
 import java.util.Date;
 import java.util.UUID;
 
@@ -109,52 +107,52 @@ public class DocLogDTO {
     public static class Builder {
         private DocLogDTO docLogDTO = new DocLogDTO();
 
-        public Builder setTenantId(UUID tenantId) {
+        public Builder withTenantId(UUID tenantId) {
             docLogDTO.setTenantId(tenantId);
             return this;
         }
 
-        public Builder setResourceId(String resourceId) {
+        public Builder withResourceId(String resourceId) {
             docLogDTO.setResourceId(resourceId);
             return this;
         }
 
-        public Builder setPhase(String phase) {
+        public Builder withPhase(String phase) {
             docLogDTO.setPhase(phase);
             return this;
         }
 
-        public Builder setPayload(String payload) {
+        public Builder withPayload(String payload) {
             docLogDTO.setPayload(payload);
             return this;
         }
 
-        public Builder setActionResult(String actionResult) {
+        public Builder withActionResult(String actionResult) {
             docLogDTO.setActionResult(actionResult);
             return this;
         }
 
-        public Builder setRetryTimes(int retryTimes) {
+        public Builder withRetryTimes(int retryTimes) {
             docLogDTO.setRetryTimes(retryTimes);
             return this;
         }
 
-        public Builder setThrowTime(Date throwTime) {
+        public Builder withThrowTime(Date throwTime) {
             docLogDTO.setThrowTime(throwTime);
             return this;
         }
 
-        public Builder setMessage(String message) {
+        public Builder withMessage(String message) {
             docLogDTO.setMessage(message);
             return this;
         }
 
-        public Builder setTaskId(Integer taskId) {
+        public Builder withTaskId(Integer taskId) {
             docLogDTO.setTaskId(taskId);
             return this;
         }
 
-        public Builder setResourceType(String resourceType) {
+        public Builder withResourceType(String resourceType) {
             docLogDTO.setResourceType(resourceType);
             return  this;
         }

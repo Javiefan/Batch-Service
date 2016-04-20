@@ -34,9 +34,9 @@ public class TaskDocLogDAOTest {
         int curRetry =0;
         for (int i = 0; i < retryAttempt; i++) {
             this.taskDocLogDAO.insert(taskDocLog);
-            curRetry = taskDocLog.getRetryTime();
         }
-        assertEquals("retry "+retryAttempt+" times, but recorded "+curRetry+" times",retryAttempt,curRetry);
+        List<TaskDocLog> taskDocLogs = taskDocLogDAO.get(taskDocLog.getResourceId(), taskDocLog.getResourceType());
+        assertEquals("retry "+retryAttempt+" times, but recorded "+curRetry+" times",retryAttempt,taskDocLogs.size());
     }
 
     @Test
@@ -48,7 +48,7 @@ public class TaskDocLogDAOTest {
             this.taskDocLogDAO.insert(taskDocLog);
         }
 
-        List<TaskDocLog> list =  this.taskDocLogDAO.get(tenantId,resourceId,phase, resourceType);
+        List<TaskDocLog> list =  this.taskDocLogDAO.get(resourceId, resourceType);
         assertEquals("expect "+retryAttempt+" records, but get "+ list.size()+" records", retryAttempt,list.size());
     }
 

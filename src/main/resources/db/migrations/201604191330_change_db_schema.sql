@@ -3,10 +3,10 @@ DROP TABLE IF EXISTS task_doc_log;
 
 CREATE TABLE task_doc_log (
   id               BIGSERIAL PRIMARY KEY NOT NULL,
-  tenant_id        UUID                  NOT NULL,
+  tenant_id        UUID,
   resource_id      CHARACTER VARYING     NOT NULL,
   resource_type    CHARACTER VARYING     NOT NULL,
-  phase            CHARACTER VARYING(16) NOT NULL,
+  phase            CHARACTER VARYING(16),
   retry_time       INTEGER,
   action_result    CHARACTER VARYING(16),
   message          CHARACTER VARYING,
@@ -19,10 +19,10 @@ CREATE INDEX task_doc_log_action_timestamp_index ON task_doc_log (action_timesta
 CREATE TABLE fail_doc_log
 (
   id             BIGSERIAL PRIMARY KEY NOT NULL,
-  tenant_id      UUID                  NOT NULL,
+  tenant_id      UUID,
   resource_id    CHARACTER VARYING     NOT NULL,
   resource_type  CHARACTER VARYING     NOT NULL,
-  phase          VARCHAR(16)           NOT NULL,
+  phase          VARCHAR(16),
   task_id        BIGINT,
   message        VARCHAR,
   fail_timestamp TIMESTAMP             NOT NULL DEFAULT 'now()',
