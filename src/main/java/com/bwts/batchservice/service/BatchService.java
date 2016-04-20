@@ -33,14 +33,14 @@ public class BatchService {
     public void processTask(DocLogDTO docLogDTO, BatchCallback callback) {
         int retriedTimes = getRetriedTimes(docLogDTO);
         if (retriedTimes >= maxRetryCount) {
-            LOGGER.info("type: {} resourceId: {}   has tried more than {} times. stopping trying", docLogDTO.getResourceType(), docLogDTO.getTenantId(),
+            LOGGER.info("type: {} resourceId: {}   has tried more than {} times. stopping trying", docLogDTO.getResourceType(),
                     docLogDTO.getResourceId(), maxRetryCount);
             saveFailDoc(docLogDTO);
             callback.exceedMaxRetry();
         } else {
-            LOGGER.info("type: {} resourceId: {}  has tried {}th times, max times {}", docLogDTO.getResourceType(), docLogDTO.getTenantId(),
-                    docLogDTO.getResourceId(), docLogDTO.getRetryTimes(), maxRetryCount);
-            docLogDTO.setRetryTimes(docLogDTO.getRetryTimes() + 1);
+            LOGGER.info("type: {} resourceId: {}  has tried {}th times, max times {}", docLogDTO.getResourceType(),
+                    docLogDTO.getResourceId(), retriedTimes, maxRetryCount);
+            docLogDTO.setRetryTimes(retriedTimes + 1);
             saveTaskDoc(docLogDTO);
             callback.afterRetry();
         }

@@ -1,6 +1,5 @@
 package com.bwts.batchservice;
 
-import com.bwts.common.kafka.KafkaProducerConfig;
 import com.bwts.common.rest.client.RestClient.DocumentApiRestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,7 +9,6 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.web.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Import;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
