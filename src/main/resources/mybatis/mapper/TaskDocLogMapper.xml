@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.bwts.batchservice.dao.mapper.TaskDocLogMapper">
+    <resultMap id="BaseResultMap" type="com.bwts.batchservice.entity.TaskDocLog">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="tenant_id" property="tenantId" typeHandler="UUIDTypeHandler"/>
+        <result column="resource_id" property="resourceId" jdbcType="VARCHAR"/>
+        <result column="resource_type" property="resourceType" jdbcType="VARCHAR"/>
+        <result column="phase" property="phase" jdbcType="VARCHAR"/>
+        <result column="retry_time" property="retryTime" jdbcType="INTEGER"/>
+        <result column="action_result" property="actionResult" jdbcType="VARCHAR"/>
+        <result column="message" property="message" jdbcType="VARCHAR"/>
+        <result column="action_timestamp" property="actionTimestamp" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id, tenant_id, resource_id, resource_type, phase, retry_time, action_result, message, action_timestamp
+    </sql>
+    <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long">
+        select
+        <include refid="Base_Column_List"/>
+        from task_doc_log
+        where id = #{id,jdbcType=BIGINT}
+    </select>
+    <select id="selectDocLog" resultMap="BaseResultMap" parameterType="Map">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM task_doc_log
+        WHERE resource_id = #{resourceId,jdbcType=VARCHAR}
+        AND resource_type = #{resourceType,jdbcType=VARCHAR}
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        DELETE FROM task_doc_log
+        WHERE id = #{id,jdbcType=BIGINT}
+    </delete>
+    <insert id="insert" parameterType="com.bwts.batchservice.entity.TaskDocLog">
+        INSERT INTO task_doc_log (tenant_id,
+        resource_id, resource_type, phase, retry_time,
+        action_result, message, action_timestamp
+        ) VALUES (#{tenantId,jdbcType=OTHER,typeHandler=UUIDTypeHandler},
+        #{resourceId,jdbcType=VARCHAR},#{resourceType,jdbcType=VARCHAR},
+        #{phase,jdbcType=VARCHAR},#{retryTime,jdbcType=INTEGER},
+        #{actionResult,jdbcType=VARCHAR}, #{message,jdbcType=VARCHAR}, #{actionTimestamp, jdbcType=TIMESTAMP})
+    </insert>
+</mapper>
