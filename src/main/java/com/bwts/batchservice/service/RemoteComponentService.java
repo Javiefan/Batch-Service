@@ -48,14 +48,12 @@ public class RemoteComponentService {
         }
 
         LOGGER.info("Begin retry components, the size is {}", documentStatusListDTO.getItems().size());
-        JSONObject jsonObject = new JSONObject();
 
         JSONArray items = new JSONArray();
         for (DocumentStatusDTO documentStatusDTO : documentStatusListDTO.getItems()) {
             items.add(documentStatusDTO.getResourceId());
         }
-        jsonObject.put("items", items);
-        Entity<JSONObject> entity = Entity.entity(jsonObject, MediaType.APPLICATION_JSON);
+        Entity<JSONArray> entity = Entity.entity(items, MediaType.APPLICATION_JSON);
         documentApiRestClient.getResource()
                 .path("components/backup")
                 .request()
