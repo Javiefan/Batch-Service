@@ -16,7 +16,7 @@
 
     <properties>
         <target.dir>target</target.dir>
-        <bwts.common.version>0.7.20</bwts.common.version>
+        <bwts.common.version>0.8.1</bwts.common.version>
     </properties>
 
     <build>
