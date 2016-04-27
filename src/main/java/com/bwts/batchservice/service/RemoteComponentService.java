@@ -42,12 +42,12 @@ public class RemoteComponentService {
     }
 
     public void retryComponent(DocumentStatusListDTO documentStatusListDTO) {
-        if (documentStatusListDTO == null) {
-            LOGGER.info("documentStatusListDTO is illegal");
+        LOGGER.info("Begin retry components, the size is {}", documentStatusListDTO.getItems().size());
+
+        if (documentStatusListDTO == null || documentStatusListDTO.getItems().isEmpty()) {
+            LOGGER.info("documentStatusListDTO is illegal or documentStatusListDTO is empty");
             return;
         }
-
-        LOGGER.info("Begin retry components, the size is {}", documentStatusListDTO.getItems().size());
 
         JSONArray items = new JSONArray();
         for (DocumentStatusDTO documentStatusDTO : documentStatusListDTO.getItems()) {
