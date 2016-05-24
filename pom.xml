@@ -5,18 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>batch-service</artifactId>
-    <version>0.0.3</version>
+    <groupId>com.baiwang</groupId>
+    <version>0.0.1</version>
     <packaging>jar</packaging>
-
-    <parent>
-        <groupId>com.bwts</groupId>
-        <artifactId>bwts-parent</artifactId>
-        <version>0.1.3</version>
-    </parent>
 
     <properties>
         <target.dir>target</target.dir>
-        <bwts.common.version>0.8.1</bwts.common.version>
     </properties>
 
     <build>
@@ -28,30 +22,6 @@
                     <execution>
                         <goals>
                             <goal>repackage</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>aspectj-maven-plugin</artifactId>
-                <version>1.8</version>
-                <configuration>
-                    <complianceLevel>1.8</complianceLevel>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                    <showWeaveInfo>true</showWeaveInfo>
-                    <weaveDependencies>
-                        <weaveDependency>
-                            <groupId>com.bwts</groupId>
-                            <artifactId>bwts-common-utils</artifactId>
-                        </weaveDependency>
-                    </weaveDependencies>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>compile</goal>
                         </goals>
                     </execution>
                 </executions>
@@ -73,7 +43,7 @@
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
-                <version>${spring-boot.version}</version>
+                <version>1.3.0.RELEASE</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -89,6 +59,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+            <version>1.3.0.RELEASE</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.springframework.boot</groupId>
@@ -99,23 +70,28 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-jersey</artifactId>
+            <version>1.3.0.RELEASE</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-jetty</artifactId>
+            <version>1.3.0.RELEASE</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-jdbc</artifactId>
+            <version>4.2.3.RELEASE</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-tx</artifactId>
+            <version>4.2.3.RELEASE</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-aspects</artifactId>
+            <version>4.2.3.RELEASE</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -129,16 +105,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <dependency>
-            <groupId>com.bwts</groupId>
-            <artifactId>bwts-common-utils</artifactId>
-            <version>${bwts.common.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.bwts</groupId>
-            <artifactId>bwts-common-mybatis</artifactId>
-            <version>${bwts.common.version}</version>
-        </dependency>
 
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -146,56 +112,14 @@
             <version>9.4-1201-jdbc41</version>
         </dependency>
         <dependency>
-            <groupId>com.carbonfive</groupId>
-            <artifactId>db-migration</artifactId>
-            <version>0.9.7</version>
+            <groupId>org.hsqldb</groupId>
+            <artifactId>hsqldb</artifactId>
+            <version>2.3.2</version>
         </dependency>
         <dependency>
-            <groupId>com.carbonfive</groupId>
-            <artifactId>db-support</artifactId>
-            <version>0.9.7</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mybatis</groupId>
-            <artifactId>mybatis-spring</artifactId>
-            <version>1.2.4</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mybatis</groupId>
-            <artifactId>mybatis</artifactId>
-            <version>3.3.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.bwts</groupId>
-            <artifactId>bwts-common-kafka</artifactId>
-            <version>${bwts.common.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.bwts</groupId>
-            <artifactId>bwts-common-security</artifactId>
-            <version>${bwts.common.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.bwts</groupId>
-            <artifactId>bwts-common-batch</artifactId>
-            <version>${bwts.common.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.bwts</groupId>
-            <artifactId>bwts-common-rest</artifactId>
-            <version>${bwts.common.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>net.sf.json-lib</groupId>
-            <artifactId>json-lib</artifactId>
-            <version>2.4</version>
-        </dependency>
-
-        <!--Test-->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
+            <groupId>com.baiwang</groupId>
+            <artifactId>db2</artifactId>
+            <version>1.0</version>
         </dependency>
     </dependencies>
 

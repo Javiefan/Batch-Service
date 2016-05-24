@@ -1,19 +1,18 @@
 package com.bwts.batchservice.service;
 
 
-import com.bwts.batchservice.dao.FailDocLogDAO;
-import com.bwts.batchservice.dao.TaskDocLogDAO;
-import com.bwts.batchservice.dto.DocLogDTO;
-import com.bwts.batchservice.entity.FailDocLog;
-import com.bwts.batchservice.entity.TaskDocLog;
+import com.bwts.batchservice.dao.DB2DAO;
+import com.bwts.batchservice.dao.PostgreSQLDAO;
+import com.bwts.batchservice.entity.Company;
+import com.bwts.batchservice.entity.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
+import java.sql.Timestamp;
+import java.util.List;
 
 @Service
 @Transactional
@@ -22,62 +21,35 @@ public class BatchService {
     private static final Logger LOGGER = LoggerFactory.getLogger(BatchService.class);
 
     @Autowired
-    private TaskDocLogDAO taskDocLogDAO;
+    private PostgreSQLDAO postgreSQLDAO;
     @Autowired
-    private FailDocLogDAO failDocLogDAO;
+    private DB2DAO db2DAO;
 
-    @Value("${batch.max.retry}")
-    private int maxRetryCount;
+    public void copyData(Timestamp startTime, Timestamp endTime) {
+        List<Document> documentList = postgreSQLDAO.getDocumentList(startTime, endTime);
+        List<Company> companyList = postgreSQLDAO.getCompanyList(startTime, endTime);
+        db2DAO.insertInvoiceDetailInfo(documentList);
 
-
-    public void processTask(DocLogDTO docLogDTO, BatchCallback callback) {
-        int retriedTimes = getRetriedTimes(docLogDTO);
-        if (retriedTimes >= maxRetryCount) {
-            LOGGER.info("type: {} resourceId: {}   has tried more than {} times. stopping trying", docLogDTO.getResourceType(),
-                    docLogDTO.getResourceId(), maxRetryCount);
-            saveFailDoc(docLogDTO);
-            callback.exceedMaxRetry();
+        if (db2DAO.checkInvoiceInfoExists()) {
+            db2DAO.updateInvoiceInfo(documentList.size());
         } else {
-            LOGGER.info("type: {} resourceId: {}  has tried {}th times, max times {}", docLogDTO.getResourceType(),
-                    docLogDTO.getResourceId(), retriedTimes, maxRetryCount);
-            docLogDTO.setRetryTimes(retriedTimes + 1);
-            saveTaskDoc(docLogDTO);
-            callback.afterRetry();
+            try {
+                db2DAO.insertInvoiceInfo(documentList.size());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        for (Company company : companyList) {
+            if (db2DAO.checkCompanyExists(company)) {
+                db2DAO.updateComInvoiceInfo(company);
+            } else {
+                try {
+                    db2DAO.insertComInvoiceInfo(company);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
-
-    private void saveTaskDoc(DocLogDTO docLogDTO) {
-        TaskDocLog taskDocLog = new TaskDocLog();
-        taskDocLog.setTenantId(docLogDTO.getTenantId());
-        taskDocLog.setResourceId(docLogDTO.getResourceId());
-        taskDocLog.setResourceType(docLogDTO.getResourceType());
-        taskDocLog.setPhase(docLogDTO.getPhase());
-        taskDocLog.setRetryTime(docLogDTO.getRetryTimes());
-
-        taskDocLog.setMessage(docLogDTO.getMessage());
-        taskDocLog.setActionResult(docLogDTO.getActionResult());
-        taskDocLog.setActionTimestamp(docLogDTO.getThrowTime());
-
-        taskDocLogDAO.insert(taskDocLog);
-    }
-
-    private void saveFailDoc(DocLogDTO docLogDTO) {
-        FailDocLog failDocLog = new FailDocLog();
-
-        failDocLog.setTenantId(docLogDTO.getTenantId());
-        failDocLog.setResourceId(docLogDTO.getResourceId());
-        failDocLog.setResourceType(docLogDTO.getResourceType());
-        failDocLog.setPhase(docLogDTO.getPhase());
-
-        failDocLog.setTaskId(docLogDTO.getTaskId());
-        failDocLog.setMessage(docLogDTO.getMessage());
-        failDocLog.setFailTimestamp(new Date());
-
-        failDocLogDAO.insert(failDocLog);
-    }
-
-    public int getRetriedTimes(DocLogDTO docLogDTO) {
-        return taskDocLogDAO.get(docLogDTO.getResourceId(), docLogDTO.getResourceType()).size();
-    }
-
 }

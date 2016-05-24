@@ -1,56 +1,63 @@
 package com.bwts.batchservice.job;
 
 
-import com.bwts.batchservice.service.ComponentBatchService;
-import com.bwts.batchservice.service.DocumentBatchService;
+import com.bwts.batchservice.service.BatchService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
+import java.io.FileOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 
 @Component
 public class DocumentScheduleJobs {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DocumentScheduleJobs.class);
 
+    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+
+    @Value("${file.location}")
+    private String path;
+
     @Autowired
-    private DocumentBatchService documentBatchService;
-    @Autowired
-    private ComponentBatchService componentBatchService;
+    private BatchService batchService;
 
-    @Scheduled(fixedRateString = "${schedule.sender.regenerate.einvoice.interval}", initialDelay = 10 * 1000)
-    public void processFailedDocumentForSender() {
-        long beginTime = new Date().getTime();
-        documentBatchService.processFailedDocumentForSender();
-        long endTime = new Date().getTime();
-        LOGGER.info("Batch JOB: processFailedDocumentForSender take {} seconds to process", (endTime - beginTime) / 1000);
+    @Scheduled(fixedRateString = "${schedule.interval}", initialDelay = 2 * 1000)
+    public void migrateDate() {
+        LOGGER.info("starting batch job!");
+        Timestamp startTime = null;
+        Timestamp endTime = null;
+        try {
+            startTime = readTime();
+            LOGGER.info("start time = " + startTime);
+            endTime = new Timestamp(System.currentTimeMillis());
+            LOGGER.info("end time = " + endTime);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        batchService.copyData(startTime, endTime);
+        try {
+            saveTime(endTime);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    @Scheduled(fixedRateString = "${schedule.receiver.migrated.einvoice.interval}", initialDelay = 15 * 1000)
-    public void migrateFailedDocumentForReceiver() {
-        long beginTime = new Date().getTime();
-        documentBatchService.processFailedDocumentForReceiver();
-        long endTime = new Date().getTime();
-        LOGGER.info("Batch JOB: migrateFailedDocumentForReceiver take {} seconds to process", (endTime - beginTime) / 1000);
+    private Timestamp readTime() throws Exception {
+        String time = new String(Files.readAllBytes(Paths.get(path)));
+        return new Timestamp(dateFormat.parse(time).getTime());
     }
 
-    @Scheduled(cron = "${schedule.report.monthly.statistics.cron}")
-    public void updateDocumentStatistics() {
-        long beginTime = new Date().getTime();
-        documentBatchService.updateDocumentStatistics();
-        long endTime = new Date().getTime();
-        LOGGER.info("Batch JOB: updateDocumentStatistics take {} seconds to process", (endTime - beginTime) / 1000);
-    }
-
-    @Scheduled(fixedRateString = "${schedule.backup.component.interval}", initialDelay = 5 * 1000)
-    public void processFailedComponent() {
-        long beginTime = new Date().getTime();
-        componentBatchService.processFailedComponent();
-        long endTime = new Date().getTime();
-        LOGGER.info("Batch JOB: processFailedComponent take {} seconds to process", (endTime - beginTime) / 1000);
+    private void saveTime(Timestamp time) throws Exception {
+        FileOutputStream writer = new FileOutputStream(Paths.get(path).toFile());
+        writer.write(dateFormat.format(time).getBytes());
+        writer.close();
     }
 
 }
